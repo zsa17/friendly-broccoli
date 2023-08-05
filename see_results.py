@@ -17,14 +17,14 @@ if __name__ == "__main__":
     passive_team = 1
 
     # These are the specific stable baselines model that we are going to download per team
-    active_model = "./model_directory/" + str(0) + "/Number_3_team_" + str(0)
+    active_model = "./model_directory/" + str(0) + "/Number_1520_team_" + str(0)
     #active_model = "Test_Agent"
 
-    passive_model = "./model_directory/" + str(1) + "/Number_3_team_" + str(1)
+    passive_model = "./model_directory/" + str(1) + "/Number_1520_team_" + str(1)
 
     #Make a dict and add the models to samble to it , i may do this in a loop in the future.
     thread_list_elo = {}
-    thread_list_elo["/Number_" + str(3) + "_team_" + str(passive_team)] = 1200
+    thread_list_elo["/Number_" + str(1520) + "_team_" + str(passive_team)] = 1200
 
     # Enviroment specifici parameters
     environment = TurretDefenseGym

@@ -69,9 +69,9 @@ class TurretDefenseGym(gym.Env):
 
     if self.team == 0:
       #reward = self.c1 * .5 * (1 + np.cos(self.state[1])) + self.c2
-      reward = self.c1 * .5 * (1 + np.cos(self.state[1])) + self.c2
+      reward = self.c2
     elif self.team == 1:
-      reward = -self.c1 * .5 * (1 + np.cos(self.state[1])) - self.c2
+      reward = -self.c1 * .5 * (1 + np.cos(self.state[1]))
       #reward = -1
 
     #self.state = IntegrateDynamics_own_xy(self.state, self.time_step, action)

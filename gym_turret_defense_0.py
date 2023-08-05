@@ -20,12 +20,12 @@ class TurretDefenseGym(gym.Env):
                                         dtype=np.float16)
 
 
+    #self.action_space = spaces.Box(low=0, high=2, shape=(1, 1), dtype=np.float32)
     self.action_space = spaces.Discrete(3, start=-1, seed=42)
-      #spaces.Box(low=-1.0, high=1.0, shape=(1, 1), dtype=np.float32))
     self.state = [0,0]
     self.action = [0,0]
     self.time_step = .1
-    self.state_scale = [20, 2*np.pi]
+    self.state_scale = [20, np.pi]
     self.team ="RED"
     self.c1 = 1
     self.c2 = 1
@@ -53,13 +53,14 @@ class TurretDefenseGym(gym.Env):
     self.time_steps += self.time_step
 
     if self.team == 0:
-      action = [self.passive_model.predict([self.state], deterministic=True)[0][0][0], action - 1]
+      action = [self.passive_model.predict([self.state], deterministic=True)[0]*np.pi/6, action - 1]
       #action = [np.pi, action-1]
 
     elif self.team == 1:
-      action = [action[0][0], self.passive_model.predict([self.state], deterministic=True)[0][0][0]]
-      #action = [action[0][0]*np.pi, np.pi]
+      action = [action*np.pi/6, self.passive_model.predict([self.state], deterministic=True)[0] - 1]
+      #action = [action*np.pi/2, 0]
 
+    #print(action[0]/np.pi)
 
     #self.state = IntegrateDynamics(TurretDynamics,self.state,self.time_step, action)[-1]
     self.state = [self.state[0] * self.state_scale[0], self.state[1] * self.state_scale[1]]
@@ -67,10 +68,11 @@ class TurretDefenseGym(gym.Env):
     self.state = IntegrateDynamics_own(self.state, self.time_step, action)
 
     if self.team == 0:
+      #reward = self.c1 * .5 * (1 + np.cos(self.state[1])) + self.c2
       reward = self.c1 * .5 * (1 + np.cos(self.state[1])) + self.c2
-      #reward = self.c1 * .5 * (1 + np.cos(self.state[1]))
     elif self.team == 1:
       reward = -self.c1 * .5 * (1 + np.cos(self.state[1])) - self.c2
+      #reward = -1
 
     #self.state = IntegrateDynamics_own_xy(self.state, self.time_step, action)
 
@@ -88,11 +90,13 @@ class TurretDefenseGym(gym.Env):
     truncated = False
 
 
-    if self.state[0] < self.terminal_state or self.state[0] > 100:
+    if self.state[0] < self.terminal_state:
+      #print("Terminated")
       terminated = True
 
-    if self.time_steps > 1000:
+    if self.time_steps > 50:
       terminated = True
+
 
 
     self.state = [self.state[0] / self.state_scale[0], self.state[1] / self.state_scale[1]]

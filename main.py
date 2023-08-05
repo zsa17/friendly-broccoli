@@ -13,19 +13,22 @@ from gymnasium import spaces
 
 
 
+
+
+
 if __name__ == "__main__":
 
 
     # Specific parameters for the self-play system
     how_many_teams_do_you_have = 2
-    number_tournaments = 50
+    number_tournaments = 5000
     num_eval_models = 50
     move_on_threshold = 50
     num_evals = 50
     terminal_state = 2
 
     # Enviroment specifici parameters
-    environment = {"0":TurretDefenseGym_1, "1": TurretDefenseGym_1}
+    environment = {"0":TurretDefenseGym_0, "1": TurretDefenseGym_1}
     num_cpu = os.cpu_count()
 
 
@@ -49,10 +52,16 @@ if __name__ == "__main__":
         model.save("./model_directory/" + str(i) + "/Number_0_team_" + str(i))
         model.save("./model_directory/" + str(i) + "/Number_1_team_" + str(i))
 
-        counter[str(i)] = 1
+        counter[str(i)] = 1524
+        team_name = [0,1]
+    for i in range(1525):
+        for j in team_name:
+             thread_list_elo[str(j)]["Number_" + str(i) + "_team_" + str(j)] = 1200
+             thread_list_master[str(j)]["Number_" + str(i) + "_team_" + str(j)] = {"score": 0, "elo": 1200}
 
-    #
-    num = 1 #Start the counter
+
+
+    num = 1524 #Start the counter
 
 
     while num < number_tournaments:
@@ -63,17 +72,19 @@ if __name__ == "__main__":
             # Set the enviroment specific parameters and send it in models type and list.
             env_dict[str(team)].env_method("set_a", c1 = .1,
                                     c2 = 1,
-                                    passive_list = thread_list_elo[passive_team(str(team))],
+                                    #passive_list = thread_list_elo[passive_team(str(team))],
+                                    passive_list= {list(thread_list_elo[passive_team(str(team))])[-1]: 1200},
                                     passive_model_type = model,
                                     team = team,
                                     terminal_state = terminal_state,
                                     single_mode_flag = False)
 
             # Load the model weights that are about to be trained
+            model = PPO("MlpPolicy", env_dict[str(team)])
             model.load("./model_directory/" + str(team) + "/Number_" + str(counter[str(team)]) + "_team_" + str(team), env=env_dict[str(team)])
 
             # Start the learning processes
-            model = PPO("MlpPolicy", env_dict[str(team)]).learn(total_timesteps=10000)
+            model.learn(total_timesteps=10000000)
 
             # Evaluate the trained model
             thread_list_master, models_to_compare = evaluate_model(thread_list_master, env_dict[str(team)], team, model, num_eval_models,counter[str(team)] , num_cpu,num_evals)

@@ -53,26 +53,37 @@ class TurretDefenseGym(gym.Env):
     self.time_steps += self.time_step
 
     if self.team == 0:
-      action = [self.passive_model.predict([self.state], deterministic=True)[0]*np.pi/6, action - 1]
-      #action = [np.pi, action-1]
+      action_1 = [self.passive_model.predict([self.state[0:2]], deterministic=True)[0]*np.pi/6,
+                  action - 1]
+
+      action_2 = [self.passive_model.predict([self.state[2:4]], deterministic=True)[0]*np.pi/6,
+                  self.active_model_compare.predict([self.state[2:4]], deterministic=True)[0] - 1]
+
 
     elif self.team == 1:
-      action = [action*np.pi/6, self.passive_model.predict([self.state], deterministic=True)[0] - 1]
-      #action = [action*np.pi/2, 0]
+      action_1 = [action*np.pi/6, self.passive_model.predict([self.state[0:2]], deterministic=True)[0] - 1]
+      action_2 = [self.active_model_compare.predict([self.state[2:4]], deterministic=True)[0]*np.pi/6,
+                  self.passive_model.predict([self.state[2:4]], deterministic=True)[0] - 1]
 
-    #print(action[0]/np.pi)
 
     #self.state = IntegrateDynamics(TurretDynamics,self.state,self.time_step, action)[-1]
-    self.state = [self.state[0] * self.state_scale[0], self.state[1] * self.state_scale[1]]
+    self.state = [self.state[0] * self.state_scale[0], self.state[1] * self.state_scale[1],
+                  self.state[0] * self.state_scale[0], self.state[1] * self.state_scale[1],
+                  action_1[0]/2*np.pi, action_1[1]+1,
+                  action_2[0]/2*np.pi, action_2[1]+1]
 
-    self.state = IntegrateDynamics_own(self.state, self.time_step, action)
+    self.state_1 = IntegrateDynamics_own(self.state, self.time_step, action_1)
+    self.state_2 = IntegrateDynamics_own(self.state, self.time_step, action_2)
+
+
 
     if self.team == 0:
       #reward = self.c1 * .5 * (1 + np.cos(self.state[1])) + self.c2
-      reward = self.c1 * .5 * (1 + np.cos(self.state[1])) + self.c2
+      reward =  self.c2
+
     elif self.team == 1:
-      reward = -self.c1 * .5 * (1 + np.cos(self.state[1])) - self.c2
-      #reward = -1
+      reward_1 = self.c1 * .5 * (1 + np.cos(self.state[1]))
+
 
     #self.state = IntegrateDynamics_own_xy(self.state, self.time_step, action)
 
@@ -121,8 +132,9 @@ class TurretDefenseGym(gym.Env):
         observation:    array
                         the initial state of the environment
     """
-    if self.single_mode_flag == False:
-      self.passive_model = self.passive_model_type.load('model_directory/' + passive_team(str(self.team)) + '/' + list(sample_from_dict_with_weight(self.passive_list).keys())[0])
+
+    self.passive_model = self.passive_model_type.load('model_directory/' + passive_team(str(self.team)) + '/' + list(sample_from_dict_with_weight(self.passive_list).keys())[0])
+    self.active_model_compare = self.passive_model_type.load(self.active_path_compare)
 
     self.time_steps = 0
     self.state = [random.uniform(.1, .3), random.uniform(0, 1)]
