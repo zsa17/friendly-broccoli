@@ -1,6 +1,6 @@
 import os
 
-from gym_turret_defense_1 import TurretDefenseGym
+from gym_turret_defense_0 import TurretDefenseGym
 from stable_baselines3 import PPO
 from population import *
 from stable_baselines3.common.env_util import make_vec_env
@@ -17,14 +17,14 @@ if __name__ == "__main__":
     passive_team = 1
 
     # These are the specific stable baselines model that we are going to download per team
-    active_model = "./model_directory/" + str(0) + "/Number_1520_team_" + str(0)
-    #active_model = "Test_Agent"
+    active_model = "./model_directory/" + str(0) + "/Number_25_team_" + str(0)
+    #active_model = "Adversarial_team_1iteration_0"
 
-    passive_model = "./model_directory/" + str(1) + "/Number_1520_team_" + str(1)
+    passive_model = "./model_directory/" + str(1) + "/Number_25_team_" + str(1)
 
     #Make a dict and add the models to samble to it , i may do this in a loop in the future.
     thread_list_elo = {}
-    thread_list_elo["/Number_" + str(1520) + "_team_" + str(passive_team)] = 1200
+    thread_list_elo["/Number_" + str(25) + "_team_" + str(passive_team)] = 1200
 
     # Enviroment specifici parameters
     environment = TurretDefenseGym
@@ -36,8 +36,8 @@ if __name__ == "__main__":
 
     #passive_model = model.load(passive_model, env=env)
 
-    env.env_method("set_a", c1=.1,
-                   c2=10,
+    env.env_method("set_a", c1=1,
+                   c2=1,
                    passive_list=thread_list_elo,
                    passive_model_type=model,
                    team=active_team,

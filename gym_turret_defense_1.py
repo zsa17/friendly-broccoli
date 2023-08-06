@@ -76,12 +76,6 @@ class TurretDefenseGym(gym.Env):
 
     #self.state = IntegrateDynamics_own_xy(self.state, self.time_step, action)
 
-    if self.state[1] > 2*np.pi:
-      self.state[1] = 2*np.pi
-
-    if self.state[1] < 0:
-      self.state[1] = 0
-
 
     self.info["action"] = action
     self.info["time_step"] = self.time_steps

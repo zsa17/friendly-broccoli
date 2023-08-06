@@ -40,7 +40,7 @@ def IntegrateDynamics_own(state,time_step, action):
   # set the constants
   psi = action[0]
   omega = action[1]
-  v = 1
+  v = 3
   turn_rate = 1
 
   dd = v * np.cos(psi)

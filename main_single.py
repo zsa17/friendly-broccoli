@@ -21,6 +21,9 @@ if __name__ == "__main__":
     num_evals = 50
     terminal_state = 2
 
+    thread_list_elo = {}
+    thread_list_elo["/Number_" + str(1520) + "_team_" + str(passive_team)] = 1200
+
     single_mode_flag = True
 
     # Enviroment specifici parameters
@@ -37,8 +40,8 @@ if __name__ == "__main__":
 
     # Set the enviroment specific parameters and send it in models type and list.
     env.env_method("set_a", c1 = .1,
-                            c2 = 10,
-                            passive_list = {},
+                            c2 = 1,
+                            passive_list = thread_list_elo,
                             passive_model_type = model,
                             team = 1,
                             terminal_state = terminal_state,

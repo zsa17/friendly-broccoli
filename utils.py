@@ -16,23 +16,19 @@ def passive_team(active_team):
 def plot_in_xy(d,alpha, psi, omega, time):
     # some constants
     va = 1
+    time_step = time[1] - time[0]
 
     #First we need to calculate beta
-    beta = np.divide(va,d)* np.sin(psi)*time
+    beta = [np.divide(va,d[0])* np.sin(psi[0])*time_step]
+    for i in range(1,len(d)):
+        beta += [beta[-1] + np.divide(va,d[i])* np.sin(psi[i])*time_step]
 
     # convert the set of equations to xy
     x_a = np.multiply(d,np.cos(beta))*time
     y_a = np.multiply(d,np.sin(beta))*time
     gamma = np.add(beta, alpha)*time
 
-    plt.style.use('_mpl-gallery')
-
-    # plot
-    fig, ax = plt.subplots()
-
-    ax.plot(x_a, y_a, 'ro')
-
-    plt.show()
+    return [x_a, y_a]
 
 
 
@@ -67,19 +63,18 @@ def make_env(env_id: str, rank: int, seed: int = 0):
     set_random_seed(seed)
     return _init
 
-def evaluate_model(thread_list_master, vec_env, team, model, num_eval_models, num, num_cpu, num_evals):
+def evaluate_model(models_to_compare, vec_env, model, num_cpu, num_evals):
 
 
 
     # num_cpu = os. cpu_count()  # Number of processes to use
     #if num_eval_models > 50 #TODO: Need to ad this check
 
-    models_to_compare =[ "./model_directory/" + str(team) + "/Number_" + str(num) + "_team_" + str(team),"./model_directory/" + str(team) + "/Number_" + str(num-1) + "_team_" + str(team)]
 
+    model_to_compare_dict = {models_to_compare[0]: 0, models_to_compare[1]: 0}
     obs = vec_env.reset()
     for indx, value in enumerate(models_to_compare):
         model.load(value)
-
         score = np.ones(num_cpu)
         indxs_list = list(range(0, num_cpu))
         for _ in range(num_evals//num_cpu):
@@ -90,14 +85,14 @@ def evaluate_model(thread_list_master, vec_env, team, model, num_eval_models, nu
                 for check_indx, check_val in enumerate(indxs_list):
                     if dones[check_val] == True:
                         score[check_val] = rewards[check_val]
-                        indxs_list[check_indx] = 0
+                        indxs_list.pop(check_indx)
 
                 if sum(indxs_list) == 0:
-                    thread_list_master[str(team)][models_to_compare[indx].split("/")[-1]]["score"] = thread_list_master[str(team)][models_to_compare[indx].split("/")[-1]]["score"] +  sum(score)
+                    model_to_compare_dict[value] = model_to_compare_dict[value] +  sum(score)
                     break
 
 
-    return thread_list_master, models_to_compare
+    return model_to_compare_dict, models_to_compare
 
 def eval_and_plot_model(active_model, vec_env, model, num_cpu):
 
@@ -133,23 +128,23 @@ def eval_and_plot_model(active_model, vec_env, model, num_cpu):
 
 
 
-    plt.style.use('_mpl-gallery')
 
-    # plot
-    fig, ax = plt.subplots()
+    xa,ya = plot_in_xy(obs_list_x, obs_list_y, psi, omega, time)
 
-    ax.plot(obs_list_x, obs_list_y, 'bo')
 
-    plt.show()
-
-    plot_in_xy(obs_list_x, obs_list_y, psi, omega, time)
-
-    plt.style.use('_mpl-gallery')
-
-    # plot
-    fig, ax = plt.subplots()
-
-    ax.plot(time, reward_list, 'go')
+    fig, axs = plt.subplots(2, 2)
+    axs[0, 0].plot(obs_list_x, obs_list_y)
+    axs[0, 0].set_title('State Space plotted alpha versus d')
+    axs[0, 0].set(xlabel='d', ylabel='alpha')
+    axs[0, 1].plot(xa, ya, 'tab:orange')
+    axs[0, 1].set_title('x y coordinate plane')
+    axs[0, 1].set(xlabel='x coordinate', ylabel='y coordinate')
+    axs[1, 0].plot(time, reward_list, 'tab:green')
+    axs[1, 0].set_title('reward over time')
+    axs[1, 0].set(xlabel='time', ylabel='reward')
+    axs[1, 1].plot(time, omega, 'tab:red')
+    axs[1, 1].set_title('turret control over time')
+    axs[1, 1].set(xlabel='time', ylabel='omega control')
 
     plt.show()
 

@@ -24,7 +24,7 @@ if __name__ == "__main__":
     active = 1
 
     thread_list_elo = {}
-    thread_list_elo["/Number_" + str(1520) + "_team_" + str(passive_team(active_team=str(active)))] = 1200
+    thread_list_elo["/Number_" + str(25) + "_team_" + str(passive_team(active_team=str(active)))] = 1200
 
     single_mode_flag = False
 
@@ -37,11 +37,11 @@ if __name__ == "__main__":
     env = make_vec_env(environment, n_envs = num_cpu)
 
     # Create and define the model that you will be using.
-    model = PPO("MlpPolicy", env)
+    model = PPO("MlpPolicy", env, ent_coef=0.01)
 
 
     # Set the enviroment specific parameters and send it in models type and list.
-    env.env_method("set_a", c1 = .1,
+    env.env_method("set_a", c1 = 1,
                             c2 = 1,
                             passive_list = thread_list_elo,
                             passive_model_type = model,
