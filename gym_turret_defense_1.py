@@ -76,7 +76,6 @@ class TurretDefenseGym(gym.Env):
 
     #self.state = IntegrateDynamics_own_xy(self.state, self.time_step, action)
 
-
     self.info["action"] = action
     self.info["time_step"] = self.time_steps
 
@@ -88,7 +87,7 @@ class TurretDefenseGym(gym.Env):
       #print("Terminated")
       terminated = True
 
-    if self.time_steps > 50:
+    if self.time_steps > 100:
       terminated = True
 
 
@@ -119,7 +118,7 @@ class TurretDefenseGym(gym.Env):
       self.passive_model = self.passive_model_type.load('model_directory/' + passive_team(str(self.team)) + '/' + list(sample_from_dict_with_weight(self.passive_list).keys())[0])
 
     self.time_steps = 0
-    self.state = [random.uniform(.1, .3), random.uniform(0, 1)]
+    self.state = [random.uniform(.1, 1), random.uniform(0, 1)]
     #self.state = [50,0]
 
     return self.state, self.info

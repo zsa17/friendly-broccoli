@@ -17,6 +17,8 @@ def plot_in_xy(d,alpha, psi, omega, time):
     # some constants
     va = 1
     time_step = time[1] - time[0]
+    d = np.multiply(d,20)
+    alpha = np.multiply(alpha,np.pi)
 
     #First we need to calculate beta
     beta = [np.divide(va,d[0])* np.sin(psi[0])*time_step]
@@ -26,9 +28,9 @@ def plot_in_xy(d,alpha, psi, omega, time):
     # convert the set of equations to xy
     x_a = np.multiply(d,np.cos(beta))*time
     y_a = np.multiply(d,np.sin(beta))*time
-    gamma = np.add(beta, alpha)*time
+    gamma = np.add(beta, alpha)
 
-    return [x_a, y_a]
+    return [x_a, y_a,gamma]
 
 
 
@@ -129,22 +131,21 @@ def eval_and_plot_model(active_model, vec_env, model, num_cpu):
 
 
 
-    xa,ya = plot_in_xy(obs_list_x, obs_list_y, psi, omega, time)
+    xa,ya,gamma = plot_in_xy(obs_list_x, obs_list_y, psi, omega, time)
 
 
-    fig, axs = plt.subplots(2, 2)
-    axs[0, 0].plot(obs_list_x, obs_list_y)
-    axs[0, 0].set_title('State Space plotted alpha versus d')
+    fig, axs = plt.subplots(3, 2)
+    axs[0, 0].plot(obs_list_x, np.multiply(obs_list_y,180/np.pi), 'ob')
     axs[0, 0].set(xlabel='d', ylabel='alpha')
     axs[0, 1].plot(xa, ya, 'tab:orange')
-    axs[0, 1].set_title('x y coordinate plane')
-    axs[0, 1].set(xlabel='x coordinate', ylabel='y coordinate')
     axs[1, 0].plot(time, reward_list, 'tab:green')
-    axs[1, 0].set_title('reward over time')
     axs[1, 0].set(xlabel='time', ylabel='reward')
     axs[1, 1].plot(time, omega, 'tab:red')
-    axs[1, 1].set_title('turret control over time')
     axs[1, 1].set(xlabel='time', ylabel='omega control')
+    axs[2, 1].plot(time, np.multiply(psi,(180/np.pi)), 'tab:red')
+    axs[2, 1].set(xlabel='time', ylabel='psi control')
+    axs[2, 0].plot(time, gamma*180/np.pi, 'tab:red')
+    axs[2, 0].set(xlabel='time', ylabel='look angle')
 
     plt.show()
 

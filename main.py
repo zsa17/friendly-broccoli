@@ -52,16 +52,16 @@ if __name__ == "__main__":
         model.save("./model_directory/" + str(i) + "/Number_0_team_" + str(i))
         model.save("./model_directory/" + str(i) + "/Number_1_team_" + str(i))
 
-        counter[str(i)] = 1
-        # team_name = [0,1]
-    # for i in range(1525):
-    #     for j in team_name:
-    #          thread_list_elo[str(j)]["Number_" + str(i) + "_team_" + str(j)] = 1200
-    #          thread_list_master[str(j)]["Number_" + str(i) + "_team_" + str(j)] = {"score": 0, "elo": 1200}
-    #
+        counter[str(i)] = 59
+        team_name = [0,1]
+    for i in range(60):
+        for j in team_name:
+             thread_list_elo[str(j)]["Number_" + str(i) + "_team_" + str(j)] = 1200
+             thread_list_master[str(j)]["Number_" + str(i) + "_team_" + str(j)] = {"score": 0, "elo": 1200}
 
 
-    num = 1 #Start the counter
+
+    num = 59 #Start the counter
 
 
     while num < number_tournaments:
@@ -73,7 +73,7 @@ if __name__ == "__main__":
             env_dict[str(team)].env_method("set_a", c1 = 1,
                                     c2 = 1,
                                     #passive_list = thread_list_elo[passive_team(str(team))],
-                                    passive_list= {list(thread_list_elo[passive_team(str(team))])[-1]: 1200},
+                                    passive_list= thread_list_elo[passive_team(str(team))],
                                     passive_model_type = model,
                                     team = team,
                                     terminal_state = terminal_state,
@@ -84,7 +84,7 @@ if __name__ == "__main__":
             model.load("./model_directory/" + str(team) + "/Number_" + str(counter[str(team)]) + "_team_" + str(team), env=env_dict[str(team)])
 
             # Start the learning processes
-            model.learn(total_timesteps=100000)
+            model.learn(total_timesteps=250000)
 
             # Evaluate the trained model
             # thread_list_master, models_to_compare = evaluate_model(thread_list_master, env_dict[str(team)], team, model, num_eval_models,counter[str(team)] , num_cpu,num_evals)
