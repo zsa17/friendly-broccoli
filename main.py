@@ -52,16 +52,16 @@ if __name__ == "__main__":
         model.save("./model_directory/" + str(i) + "/Number_0_team_" + str(i))
         model.save("./model_directory/" + str(i) + "/Number_1_team_" + str(i))
 
-        counter[str(i)] = 59
+        counter[str(i)] = 1
         team_name = [0,1]
-    for i in range(60):
+    for i in range(2):
         for j in team_name:
              thread_list_elo[str(j)]["Number_" + str(i) + "_team_" + str(j)] = 1200
              thread_list_master[str(j)]["Number_" + str(i) + "_team_" + str(j)] = {"score": 0, "elo": 1200}
 
 
 
-    num = 59 #Start the counter
+    num = 1 #Start the counter
 
 
     while num < number_tournaments:

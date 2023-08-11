@@ -13,7 +13,7 @@ def passive_team(active_team):
 
     return passive_team
 
-def plot_in_xy(d,alpha, psi, omega, time):
+def plot_in_xy(d,alpha,beta, psi, omega, time):
     # some constants
     va = 1
     time_step = time[1] - time[0]
@@ -21,9 +21,9 @@ def plot_in_xy(d,alpha, psi, omega, time):
     alpha = np.multiply(alpha,np.pi)
 
     #First we need to calculate beta
-    beta = [np.divide(va,d[0])* np.sin(psi[0])*time_step]
-    for i in range(1,len(d)):
-        beta += [beta[-1] + np.divide(va,d[i])* np.sin(psi[i])*time_step]
+    # beta = [np.divide(va,d[0])* np.sin(psi[0])*time_step]
+    # for i in range(1,len(d)):
+    #     beta += [beta[-1] + np.divide(va,d[i])* np.sin(psi[i])*time_step]
 
     # convert the set of equations to xy
     x_a = np.multiply(d,np.cos(beta))*time
@@ -109,17 +109,20 @@ def eval_and_plot_model(active_model, vec_env, model, num_cpu):
     indxs_list = list(range(0, num_cpu))
     obs_list_x = []
     obs_list_y = []
+    beta = []
     psi = []
     omega = []
     time = []
     reward_list = []
+
     while True:
         action, _states = model.predict(obs, deterministic=True)
         obs, rewards, dones, info = vec_env.step(action)
         if dones[0] == True:
             break
-        obs_list_x += [obs[0][0][0]]
-        obs_list_y += [obs[0][0][1]]
+        obs_list_x += [info[0]["state"][0]]
+        obs_list_y += [info[0]["state"][1]]
+        beta += [info[0]["state"][2]]
         psi += [info[0]["action"][0]]
         omega += [info[0]["action"][1]]
         time += [info[0]["time_step"]]
@@ -131,7 +134,7 @@ def eval_and_plot_model(active_model, vec_env, model, num_cpu):
 
 
 
-    xa,ya,gamma = plot_in_xy(obs_list_x, obs_list_y, psi, omega, time)
+    xa,ya,gamma = plot_in_xy(obs_list_x, obs_list_y, beta,  psi, omega, time)
 
 
     fig, axs = plt.subplots(3, 2)

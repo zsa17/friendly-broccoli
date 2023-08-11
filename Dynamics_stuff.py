@@ -33,23 +33,26 @@ def IntegrateDynamics(Dynamics, starting_state,time_step, action):
   return (state)
 
 
-def IntegrateDynamics_own(state,time_step, action):
+def IntegrateDynamics_own(state,time_step, action, velocity, turn_rate):
   d = state[0]
   alpha = state[1]
+  beta = state[2]
 
   # set the constants
   psi = action[0]
   omega = action[1]
-  v = 3
-  turn_rate = 1
+  v = velocity
+  turn_rate = turn_rate
 
   dd = v * np.cos(psi)
   alphad = turn_rate*omega - (v/d)*np.sin(psi)
+  betad = (v/d)*np.sin(psi)
 
   d = dd*time_step + d
   alpha = alphad*time_step + alpha
+  beta = betad*time_step + beta
 
-  state = [d, alpha]
+  state = [d, alpha, beta]
 
 
   return (state)

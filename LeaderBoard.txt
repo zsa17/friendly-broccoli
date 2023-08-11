@@ -6,6 +6,7 @@
   },
   "1": {
     "Number_0_team_1": 1200,
-    "Number_1_team_1": 1200
+    "Number_1_team_1": 1200,
+    "Number_2_team_1": 1200
   }
 }
