@@ -57,14 +57,17 @@ class TurretDefenseGymBase(gym.Env):
 
 
     if self.team == 0:
-      action = [self.passive_model.predict([self.state_send])[0]*np.pi/6, action - 1]
+      action = [self.passive_model.predict([self.state_send], deterministic = True )[0]*np.pi/6, action/6 - 1, ]
       #action = [np.pi, action-1]
 
     elif self.team == 1:
-      action = [action*np.pi/6, self.passive_model.predict([self.state_send])[0] - 1]
+      action = [action*np.pi/6, self.passive_model.predict([self.state_send], deterministic = True )[0]/6 - 1]
       #action = [action*np.pi/2, 0]
 
+
     self.state = [self.state[0] * self.state_scale[0], self.state[1] * self.state_scale[1], self.state[2] * self.state_scale[1]]
+
+
 
     self.state = IntegrateDynamics_own(self.state, self.time_step, action, self.velocity, self.turn_rate)
 
@@ -75,7 +78,7 @@ class TurretDefenseGymBase(gym.Env):
 
     self.info["action"] = action
     self.info["state"] = self.state
-    self.info["time_step"] = self.time_step
+    self.info["time_step"] = self.time_steps
 
 
     self.terminated = False

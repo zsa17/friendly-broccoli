@@ -24,7 +24,7 @@ if __name__ == "__main__":
     thread_list_elo = {}
     thread_list_elo["/Number_" + str(1520) + "_team_" + str(passive_team)] = 1200
 
-    single_mode_flag = True
+    single_mode_flag = False
 
     # Enviroment specifici parameters
     environment = TurretDefenseGym

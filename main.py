@@ -2,7 +2,7 @@ import os
 
 from gym_turret_defense_0 import TurretDefenseGym as TurretDefenseGym_0
 from gym_turret_defense_1 import TurretDefenseGym as TurretDefenseGym_1
-from stable_baselines3 import PPO
+from stable_baselines3 import DQN
 from population import *
 from stable_baselines3.common.env_util import make_vec_env
 from stable_baselines3.common.vec_env import SubprocVecEnv
@@ -36,7 +36,6 @@ if __name__ == "__main__":
     thread_list_elo = {}
     thread_list_master = {}
     counter = {}
-    action_space = {"0": spaces.Discrete(3, start=-1, seed=42), "1": spaces.Box(low=-1.0, high=1.0, shape=(1, 1), dtype=np.float32)}
     env_dict = {}
 
     # Loop through number of teams and start the initial dictionary structure.
@@ -48,7 +47,7 @@ if __name__ == "__main__":
         # Create a vectorized enviroment to do parallel processing
         env_dict[str(i)] = make_vec_env(environment[str(i)], n_envs=num_cpu)
         # Create and define the model that you will be using.
-        model = PPO("MlpPolicy", env_dict[str(i)], n_epochs=1)
+        model = DQN("MlpPolicy", env_dict[str(i)])
         model.save("./model_directory/" + str(i) + "/Number_0_team_" + str(i))
         model.save("./model_directory/" + str(i) + "/Number_1_team_" + str(i))
 
@@ -80,7 +79,7 @@ if __name__ == "__main__":
                                     single_mode_flag = False)
 
             # Load the model weights that are about to be trained
-            model = PPO("MlpPolicy", env_dict[str(team)], n_epochs=1)
+            model = DQN("MlpPolicy", env_dict[str(team)])
             model.load("./model_directory/" + str(team) + "/Number_" + str(counter[str(team)]) + "_team_" + str(team), env=env_dict[str(team)])
 
             # Start the learning processes

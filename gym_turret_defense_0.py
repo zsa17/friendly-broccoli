@@ -19,7 +19,7 @@ class TurretDefenseGym(TurretDefenseGymBase):
     """
 
 
-    self.action_space = spaces.Discrete(3, start=-1, seed=42)
+    self.action_space = spaces.Discrete(12, start=0, seed=42)
 
     super().__init__()
 

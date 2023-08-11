@@ -19,6 +19,6 @@ class TurretDefenseGym(TurretDefenseGymBase):
     """
 
     # self.action_space = spaces.Box(low=0, high=2, shape=(1, 1), dtype=np.float32)
-    self.action_space = spaces.Discrete(12, start=-1, seed=42)
+    self.action_space = spaces.Discrete(12, start=0, seed=42)
 
     super().__init__()

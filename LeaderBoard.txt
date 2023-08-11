@@ -2,11 +2,25 @@
   "0": {
     "Number_0_team_0": 1200,
     "Number_1_team_0": 1200,
-    "Number_2_team_0": 1200
+    "Number_2_team_0": 1200,
+    "Number_3_team_0": 1200,
+    "Number_4_team_0": 1200,
+    "Number_5_team_0": 1200,
+    "Number_6_team_0": 1200,
+    "Number_7_team_0": 1200,
+    "Number_8_team_0": 1200,
+    "Number_9_team_0": 1200
   },
   "1": {
     "Number_0_team_1": 1200,
     "Number_1_team_1": 1200,
-    "Number_2_team_1": 1200
+    "Number_2_team_1": 1200,
+    "Number_3_team_1": 1200,
+    "Number_4_team_1": 1200,
+    "Number_5_team_1": 1200,
+    "Number_6_team_1": 1200,
+    "Number_7_team_1": 1200,
+    "Number_8_team_1": 1200,
+    "Number_9_team_1": 1200
   }
 }

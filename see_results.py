@@ -1,7 +1,7 @@
 import os
 
 from gym_turret_defense_0 import TurretDefenseGym
-from stable_baselines3 import PPO
+from stable_baselines3 import DQN
 from population import *
 from stable_baselines3.common.env_util import make_vec_env
 from stable_baselines3.common.vec_env import SubprocVecEnv
@@ -15,14 +15,14 @@ if __name__ == "__main__":
     #1 and 0 represent the team number
     active_team = 0
     passive_team = 1
-    passive_num = 2
-    active_num = 2
+    passive_num = 8
+    active_num = 8
 
     # These are the specific stable baselines model that we are going to download per team
     active_model = "./model_directory/" + str(active_team) + "/Number_" + str(active_num) + "_team_" + str(active_team)
-    #active_model = "Adversarial_team_1iteration_0"
+    passive_model = "Adversarial_team_1iteration_1"
 
-    passive_model = "./model_directory/" + str(passive_team) + "/Number_" + str(passive_num) + "_team_" + str(passive_team)
+    #passive_model = "./model_directory/" + str(passive_team) + "/Number_" + str(passive_num) + "_team_" + str(passive_team)
 
     #Make a dict and add the models to samble to it , i may do this in a loop in the future.
     thread_list_elo = {}
@@ -34,7 +34,7 @@ if __name__ == "__main__":
 
     env = make_vec_env(environment, n_envs = num_cpu)
 
-    model = PPO("MlpPolicy", env)
+    model = DQN("MlpPolicy", env)
 
     #passive_model = model.load(passive_model, env=env)
 

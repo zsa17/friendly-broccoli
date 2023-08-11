@@ -1,7 +1,7 @@
 import os
 
-from gym_turret_adversarial_2 import TurretDefenseGym
-from stable_baselines3 import PPO
+from gym_turret_defense_0 import TurretDefenseGym
+from stable_baselines3 import DQN
 from population import *
 from stable_baselines3.common.env_util import make_vec_env
 from stable_baselines3.common.vec_env import SubprocVecEnv
@@ -24,7 +24,7 @@ if __name__ == "__main__":
     active = 1
 
     thread_list_elo = {}
-    thread_list_elo["/Number_" + str(25) + "_team_" + str(passive_team(active_team=str(active)))] = 1200
+    thread_list_elo["/Number_" + str(340) + "_team_" + str(passive_team(active_team=str(active)))] = 1200
 
     single_mode_flag = False
 
@@ -37,7 +37,7 @@ if __name__ == "__main__":
     env = make_vec_env(environment, n_envs = num_cpu)
 
     # Create and define the model that you will be using.
-    model = PPO("MlpPolicy", env, ent_coef=0.01)
+    model = DQN("MlpPolicy", env)
 
 
     # Set the enviroment specific parameters and send it in models type and list.
@@ -49,11 +49,11 @@ if __name__ == "__main__":
                             terminal_state = terminal_state,
                             single_mode_flag = single_mode_flag)
 
-    model = PPO("MlpPolicy", env)
+    model = DQN("MlpPolicy", env)
 
     print("starting the training")
 
-    for i in range(100):
+    for i in range(21, 100):
 
         # Start the learning processes
         model.learn(total_timesteps=1000000)
