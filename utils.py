@@ -33,6 +33,46 @@ def plot_in_xy(d,alpha,beta, psi, omega, time):
     return [x_a, y_a,gamma]
 
 
+# Python 3 program for Elo Rating
+import math
+
+
+# Function to calculate the Probability
+
+
+def Probability(rating1, rating2):
+    return 1.0 * 1.0 / (1 + 1.0 * math.pow(10, 1.0 * (rating1 - rating2) / 400))
+
+
+# Function to calculate Elo rating
+# K is a constant.
+# d determines whether
+# Player A wins or Player B.
+def EloRating(Ra, Rb, K, d):
+    # To calculate the Winning
+    # Probability of Player B
+    Pb = Probability(Ra, Rb)
+
+    # To calculate the Winning
+    # Probability of Player A
+    Pa = Probability(Rb, Ra)
+
+    # Case -1 When Player A wins
+    # Updating the Elo Ratings
+    if (d == 1):
+        Ra = Ra + K * (1 - Pa)
+        Rb = Rb + K * (0 - Pb)
+
+    # Case -2 When Player B wins
+    # Updating the Elo Ratings
+    else:
+        Ra = Ra + K * (0 - Pa)
+        Rb = Rb + K * (1 - Pb)
+
+    return Ra, Rb
+
+
+
 
 
 
@@ -95,6 +135,48 @@ def evaluate_model(models_to_compare, vec_env, model, num_cpu, num_evals):
 
 
     return model_to_compare_dict, models_to_compare
+
+def eval_list_of_models(active_models, vec_env, model, num_eval_games, active_team):
+
+
+
+    # num_cpu = os. cpu_count()  # Number of processes to use
+    #if num_eval_models > 50 #TODO: Need to ad this check
+    evaluation_dictionary = {}
+    for active_model in active_models:
+
+
+        model.load("./model_directory/" + str(active_team)+ "/" + active_model)
+        obs = vec_env.reset()
+
+        obs_list_x = []
+        obs_list_y = []
+        beta = []
+        psi = []
+        omega = []
+        time = []
+        reward_list = []
+        evaluation_dictionary[active_model] = {"rewards":0, "num_games":0}
+
+        reward_list = np.array(np.zeros(vec_env.num_envs))
+        print("Evaluating" + active_model)
+        while evaluation_dictionary[active_model]["num_games"] < num_eval_games:
+
+            action, _states = model.predict(obs, deterministic=True)
+            obs, rewards, dones, info = vec_env.step(action)
+
+            reward_list += rewards
+            indices = [i for i in range(len(dones)) if dones[i] == True]
+
+            for indx in indices:
+                evaluation_dictionary[active_model]["rewards"] += reward_list[indx]
+                evaluation_dictionary[active_model]["num_games"] += 1
+                reward_list[indx] = 0
+
+        evaluation_dictionary[active_model]["rewards"] = evaluation_dictionary[active_model]["rewards"]/evaluation_dictionary[active_model]["num_games"]
+
+    return evaluation_dictionary
+
 
 def eval_and_plot_model(active_model, vec_env, model, num_cpu):
 
@@ -165,6 +247,36 @@ def should_we_move_on(score_1, score_2, desired_percent):
 def save_leader_board(details):
     with open('LeaderBoard.txt', 'w') as leader_board:
         leader_board.write(json.dumps(details, indent=2))
+
+def save_reward_board(details):
+    with open('AverageReward.txt', 'w') as leader_board:
+        leader_board.write(json.dumps(details, indent=2))
+
+def update_elo(performation_dictionary, elo_dictionary, team):
+    for keys in performation_dictionary:
+        for keys_2 in performation_dictionary:
+
+            Ra = elo_dictionary[keys]
+            Rb = elo_dictionary[keys_2]
+            K = 30
+
+            if performation_dictionary[keys]["rewards"] > performation_dictionary[keys_2]["rewards"]:
+                d = 1
+                Ra,Rb =EloRating(Ra, Rb, K, d)
+                elo_dictionary[keys] = Ra
+                elo_dictionary[keys_2] = Rb
+            elif performation_dictionary[keys]["rewards"] < performation_dictionary[keys_2]["rewards"]:
+                d = 2
+                EloRating(Ra, Rb, K, d)
+                Ra = elo_dictionary[keys]
+                Rb = elo_dictionary[keys_2]
+                elo_dictionary[keys]= Ra
+                elo_dictionary[keys_2] = Rb
+            else:
+                pass
+
+    return elo_dictionary
+
 
 
 #def scores_to_elo(player_1_elo, player_2_elo, player_1_score, player_2_score, max_min_flag):

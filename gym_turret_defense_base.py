@@ -34,8 +34,8 @@ class TurretDefenseGymBase(gym.Env):
     self.time_steps = 0
     self.terminal_state = 2
     self.state_send = [0,0,0,0]
-    self.velocity = 3
-    self.turn_rate = 2
+    self.velocity = 1
+    self.turn_rate = 1
     self.truncated = False
     self.teminated = False
     self.reaward = 0
@@ -87,15 +87,20 @@ class TurretDefenseGymBase(gym.Env):
 
     if self.state[0] < self.terminal_state:
       self.terminated = True
+      if self.team == 0:
+        pass
+      elif self.team == 1:
+        self.reward += 500
 
-    if self.time_steps > 100:
+    if self.time_steps > 50:
       self.truncated = True
 
     self.state = [self.state[0] / self.state_scale[0], self.state[1] / self.state_scale[1], self.state[2] / self.state_scale[1]]
 
     self.state_send = [self.state[0] / self.state_scale[0], np.cos(self.state[1]), np.sin(self.state[1]), np.cos(self.state[2]), np.sin(self.state[2])]
 
-
+    #Incerase, decrease numebr of iteration per epoch.
+    # Can we cycle through things lets dig deeper into the rsults.
 
 
     return [self.state_send], self.reward, self.terminated, self.truncated, self.info
@@ -123,7 +128,7 @@ class TurretDefenseGymBase(gym.Env):
 
     self.state = [random.uniform(.1, 1), random.uniform(0, 1), random.uniform(0, 1)]
 
-    self.state = [.4,.2,.5]
+    #self.state = [.4,.2,.5]
 
     self.state_send = [self.state[0] / self.state_scale[0], np.cos(self.state[1]), np.sin(self.state[1]), np.cos(self.state[2]), np.sin(self.state[2])]
 
