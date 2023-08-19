@@ -156,6 +156,7 @@ def eval_list_of_models(active_models, vec_env, model, num_eval_games, active_te
         omega = []
         time = []
         reward_list = []
+        sum_end_d = 0
         evaluation_dictionary[active_model] = {"rewards":0, "num_games":0}
 
         reward_list = np.array(np.zeros(vec_env.num_envs))
@@ -170,12 +171,16 @@ def eval_list_of_models(active_models, vec_env, model, num_eval_games, active_te
 
             for indx in indices:
                 evaluation_dictionary[active_model]["rewards"] += reward_list[indx]
+                sum_end_d += obs[indx][0][0]
                 evaluation_dictionary[active_model]["num_games"] += 1
                 reward_list[indx] = 0
 
         evaluation_dictionary[active_model]["rewards"] = evaluation_dictionary[active_model]["rewards"]/evaluation_dictionary[active_model]["num_games"]
+        average_end_d = sum_end_d/evaluation_dictionary[active_model]["num_games"]
 
-    return evaluation_dictionary
+        extra_info = [average_end_d]
+
+    return evaluation_dictionary,extra_info
 
 
 def eval_and_plot_model(active_model, vec_env, model, num_cpu):
@@ -252,6 +257,10 @@ def save_reward_board(details):
     with open('AverageReward.txt', 'w') as leader_board:
         leader_board.write(json.dumps(details, indent=2))
 
+def save_extra_board(details):
+    with open('extra_data.txt', 'w') as leader_board:
+        leader_board.write(json.dumps(details, indent=2))
+
 def update_elo(performation_dictionary, elo_dictionary, team):
     for keys in performation_dictionary:
         for keys_2 in performation_dictionary:
@@ -276,6 +285,17 @@ def update_elo(performation_dictionary, elo_dictionary, team):
                 pass
 
     return elo_dictionary
+
+def turret_controller(alpha):
+    if alpha>0:
+        action = -1
+    elif alpha<0:
+        action = 1
+    else:
+        action = 0
+
+    return action
+
 
 
 

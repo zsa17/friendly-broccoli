@@ -5,7 +5,7 @@ from Dynamics_stuff import IntegrateDynamics, TurretDynamics, IntegrateDynamics_
 import random
 import numpy as np
 from utils import sample_from_dict_with_weight, passive_team
-from gym_turret_defense_base import TurretDefenseGymBase
+from gym_turret_defense_base_history import TurretDefenseGymBase
 
 class TurretDefenseGym(TurretDefenseGymBase):
   metadata = {'render.modes': ['human']}

@@ -4,7 +4,7 @@ from gymnasium import spaces
 from Dynamics_stuff import IntegrateDynamics, TurretDynamics, IntegrateDynamics_own, IntegrateDynamics_own_xy
 import random
 import numpy as np
-from utils import sample_from_dict_with_weight, passive_team
+from utils import sample_from_dict_with_weight, passive_team, turret_controller
 
 class TurretDefenseGymBase(gym.Env):
   metadata = {'render.modes': ['human']}
@@ -62,6 +62,8 @@ class TurretDefenseGymBase(gym.Env):
 
     elif self.team == 1:
       action = [action*np.pi/6, self.passive_model.predict([self.state_send], deterministic = True )[0]/6 - 1]
+
+      #action = [action * np.pi / 6, turret_controller(self.state[1])] #True Answer
       #action = [action*np.pi/2, 0]
 
 
