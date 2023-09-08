@@ -60,7 +60,7 @@ if __name__ == "__main__":
         model.save("./model_directory/" + str(i) + "/Number_0_team_" + str(i))
         model.save("./model_directory/" + str(i) + "/Number_1_team_" + str(i))
 
-        counter[str(i)] = 21
+        counter[str(i)] = 1
 
     # If you want to pre-populate
     # for i in range(2):
