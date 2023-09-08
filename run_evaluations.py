@@ -26,7 +26,7 @@ if __name__ == "__main__":
     number_tournaments = 5000
     num_eval_models = 20
     move_on_threshold = 50
-    num_evals = 10
+    num_evals = 20
     terminal_state = 2
     train_for_time_steps = 10000
 
@@ -55,12 +55,12 @@ if __name__ == "__main__":
         # Create a vectorized enviroment to do parallel processing
         env_dict[str(i)] = make_vec_env(environment[str(i)], n_envs=num_cpu)
 
-        # Create and define the model that you will be using.
         model = PPO("MlpPolicy", env_dict[str(i)], n_epochs=2, policy_kwargs=policy_kwargs)
-        model.save("./model_directory/" + str(i) + "/Number_0_team_" + str(i))
-        model.save("./model_directory/" + str(i) + "/Number_1_team_" + str(i))
 
-        counter[str(i)] = 21
+
+        counter[str(i)] = 985
+
+
 
     # If you want to pre-populate
     # for i in range(2):
@@ -85,7 +85,7 @@ if __name__ == "__main__":
         for team in range(how_many_teams_do_you_have):
             print("Starting New Round")
             move_on_check = True
-            train_again_flag = False
+            train_again_flag = True
             time_step_trained = 0
             while move_on_check:
 
@@ -102,21 +102,8 @@ if __name__ == "__main__":
 
                 # Load the model weights that are about to be trained
                 model = PPO("MlpPolicy", env_dict[str(team)], n_epochs=2, policy_kwargs=policy_kwargs)
-                model.load("./model_directory/" + str(team) + "/Number_" + str(counter[str(team)]) + "_team_" + str(team), env=env_dict[str(team)])
 
-                # Start the learning processes
-                model.learn(total_timesteps=train_for_time_steps)
-
-                model.save("./model_directory/" + str(team) + "/Number_" + str(counter[str(team)]) + "_team_" + str(team))
-                thread_list_elo[str(team)]["Number_" + str(counter[str(team)] ) + "_team_" + str(team)] = 1200
-                # Create a vectorized enviroment to do parallel processing
-                if train_again_flag == True:
-                    temp_elo_list = {"Number_" + str(counter[str(team)]) + "_team_" + str(team): thread_list_elo[str(team)]["Number_" + str(counter[str(team)]) + "_team_" + str(team)]}
-                    temp_elo_list["Number_" + str(counter[str(team)]-1) + "_team_" + str(team)] = thread_list_elo[str(team)]["Number_" + str(counter[str(team)]-1) + "_team_" + str(team)]
-                    performance_dictionary, extra_info = eval_list_of_models(temp_elo_list, env_dict[str(team)], model,
-                                                             num_evals, team)
-                else:
-                    performance_dictionary, extra_info = eval_list_of_models(thread_list_elo[str(team)], env_dict[str(team)], model,
+                performance_dictionary, extra_info = eval_list_of_models(thread_list_elo[str(team)], env_dict[str(team)], model,
                                                              num_evals, team)
 
 
@@ -124,37 +111,10 @@ if __name__ == "__main__":
                 thread_list_elo_active = update_elo(performance_dictionary, thread_list_elo[str(team)], team)
                 thread_list_elo[str(team)] = thread_list_elo_active
 
-                extra_data[str(team)]["Number_" + str(counter[str(team)]) + "_team_" + str(team)][0] += train_for_time_steps
-                extra_data[str(team)]["Number_" + str(counter[str(team)]) + "_team_" + str(team)][1] = extra_info[0]
-
-                for keys in performance_dictionary:
-                    performance_dict[str(team)][keys]["Round_" + str(counter[str(team)])] = performance_dictionary[keys]["rewards"]
-
-                denominator = performance_dictionary["Number_" + str(counter[str(team)] - 1) + "_team_" + str(team)]["rewards"] + performance_dictionary["Number_" + str(counter[str(team)]) + "_team_" + str(team)]["rewards"]
-
-                if performance_dictionary["Number_" + str(counter[str(team)]) + "_team_" + str(team)]["rewards"]/denominator> performance_dictionary["Number_" + str(counter[str(team)]-1) + "_team_" + str(team)]["rewards"]/denominator * 1.40:
-                    counter[str(team)] += 1
-
-                    model.save( "./model_directory/" + str(team) + "/Number_" + str(counter[str(team)]) + "_team_" + str(team))
-
-                    #Create a dummy one first then move
-                    performance_dict[str(team)]["Number_" + str(counter[str(team)]) + "_team_" + str(team)] = {"Round_" + str(1) : 0}
-                    for round_pre_fill in range(2,counter[str(team)]):
-                        performance_dict[str(team)]["Number_" + str(counter[str(team)])+"_team_" + str(team)]["Round_" + str(round_pre_fill)] = 0
-
-                    thread_list_elo[str(team)]["Number_" + str(counter[str(team)]) + "_team_" + str(team)] = thread_list_elo[str(team)]["Number_" + str(counter[str(team)]-1) + "_team_" + str(team)]
-                    extra_data[str(team)]["Number_" + str(counter[str(team)]) + "_team_" + str(team)] = [0,0]
-
-                    if terminal_state > 2:
-                        terminal_state = terminal_state - 1
-                    move_on_check = False
-                    train_again_flag = False
-                else:
-                    train_again_flag = True
+                move_on_check = True
+                train_again_flag = False
 
                 save_leader_board(thread_list_elo)
-                save_reward_board([performance_dict])
-                save_extra_board(extra_data)
 
                 with open('thread_list_elo.pickle', 'wb') as handle:
                     pickle.dump(thread_list_elo, handle, protocol=pickle.HIGHEST_PROTOCOL)
