@@ -70,6 +70,7 @@ class TurretDefenseGymBase(gym.Env):
 
     elif self.team == 1:
       action = [action * np.pi / 6, self.passive_model.predict([self.state_send], deterministic=True)[0] / 6 - 1]
+      #action = [action * np.pi / 6, turret_controller(self.state[1])] #True Answer
 
     self.state = IntegrateDynamics_own(self.state, self.time_step, action, self.velocity, self.turn_rate)
 
