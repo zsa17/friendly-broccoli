@@ -1,7 +1,7 @@
 import gymnasium as gym
 import numpy as np
 from gymnasium import spaces
-from Dynamics_stuff import IntegrateDynamics, TurretDynamics, IntegrateDynamics_own, IntegrateDynamics_own_xy
+from Dynamics_stuff import IntegrateDynamics, TurretDynamics, IntegrateDynamics_own_EP, IntegrateDynamics_own_xy
 import random
 import numpy as np
 from utils import sample_from_dict_with_weight, passive_team, turret_controller,attack_controller
@@ -75,8 +75,8 @@ class TurretDefenseGymBase(gym.Env):
     self.state = [self.state[0] * self.state_scale[0], self.state[1] * self.state_scale[1], self.state[2] * self.state_scale[1]]
 
 
-
-    self.state = IntegrateDynamics_own(self.state, self.time_step, action, self.velocity, self.turn_rate)
+    #MAKE THIS MAKE SENSE
+    self.state = IntegrateDynamics_own_EP(state, time_step, action, velocity_pursuer, velocity_evader,min_evader_radi,min_pursuer_radi)
 
     if self.team == 0:
       self.reward = self.c1 * .5 * (1 + np.cos(self.state[1])) + self.c2

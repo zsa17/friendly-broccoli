@@ -13,10 +13,10 @@ import random
 if __name__ == "__main__":
 
     #1 and 0 represent the team number
-    active_team = 0
-    passive_team = 1
-    passive_num = 12
-    active_num =  8
+    active_team = 1
+    passive_team = 0
+    passive_num = 53
+    active_num =  52
 
     # These are the specific stable baselines model that we are going to download per team
     active_model = "./model_directory/" + str(active_team) + "/Number_" + str(active_num) + "_team_" + str(active_team)

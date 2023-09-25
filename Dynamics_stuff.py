@@ -54,8 +54,35 @@ def IntegrateDynamics_own(state,time_step, action, velocity, turn_rate):
 
   state = [d, alpha, beta]
 
-
   return (state)
+
+def IntegrateDynamics_own_EP(state, time_step, action, velocity_pursuer, velocity_evader,min_evader_radi,min_pursuer_radi, theta):
+    x = state[0]
+    y = state[1]
+
+    # set the constants
+    psi = action[1]
+    omega = action[0]
+
+    # Constants
+    vp = velocity_pursuer
+    ve = velocity_evader
+    Re = min_evader_radi
+    Rp = min_pursuer_radi
+
+    dx = vp * np.sin(theta) - (ve*y*omega)/Re
+    dy = vp*np.cos(theta) - ve + (ve*x*omega)/Re
+    dtheta = -(ve*omega)/Re + (vp*psi)/Rp
+
+    x = dx * time_step + x
+    y = dy * time_step + y
+    theta = dtheta * time_step + theta
+
+    state = [x, y, theta, theta]
+
+    print("From dynamics" + str(state))
+
+    return (state)
 
 def IntegrateDynamics_own_xy(state,time_step, action):
   x = state[0]

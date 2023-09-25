@@ -15,8 +15,8 @@ def passive_team(active_team):
 
 def plot_in_xy(d,alpha,beta, psi, omega, time):
     # some constants
-    va = 1
-    time_step = time[1] - time[0]
+    #va = 1
+    #time_step = time[1] - time[0]
     d = np.multiply(d,20)
     alpha = np.multiply(alpha,np.pi)
 
@@ -296,7 +296,28 @@ def turret_controller(alpha):
 
     return action
 
+def attack_controller(alpha):
+    if alpha>0:
+        action = np.pi- .1
+    elif alpha<0:
+        action = np.pi + .1
+    else:
+        action = 0
 
+    return action
+
+def start_training():
+    import os
+
+    dir_path = r'model_directory/1'
+
+    number = len([entry for entry in os.listdir(dir_path) if os.path.isfile(os.path.join(dir_path, entry))])
+
+    if number == 0:
+        return 1
+
+    else:
+        return(len([entry for entry in os.listdir(dir_path) if os.path.isfile(os.path.join(dir_path, entry))])-1)
 
 
 #def scores_to_elo(player_1_elo, player_2_elo, player_1_score, player_2_score, max_min_flag):

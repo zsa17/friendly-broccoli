@@ -4,7 +4,11 @@ from gymnasium import spaces
 from Dynamics_stuff import IntegrateDynamics, TurretDynamics, IntegrateDynamics_own, IntegrateDynamics_own_xy
 import random
 import numpy as np
-from utils import sample_from_dict_with_weight, passive_team, turret_controller,attack_controller
+from utils import sample_from_dict_with_weight, passive_team, turret_controller
+
+# Import collections module:
+import collections
+
 
 class TurretDefenseGymBase(gym.Env):
   metadata = {'render.modes': ['human']}
@@ -16,14 +20,14 @@ class TurretDefenseGymBase(gym.Env):
     Example:
     """
 
-    self.observation_space = spaces.Box(low=np.array([[0,-1,-1,-1,-1]]),
-                                        high=np.array([[1,1, 1, 1, 1]]),
+    self.observation_space = spaces.Box(low=np.array([[0,-1,-1,-1,-1,0,-1,-1,-1,-1,0,-1,-1,-1,-1,0,-1,-1,-1,-1,0,-1,-1,-1,-1]]),
+                                        high=np.array([[1,1, 1, 1, 1,1,1, 1, 1, 1,1,1, 1, 1, 1,1,1, 1, 1, 1,1,1, 1, 1, 1]]),
                                         dtype=np.float16)
 
     self.state = [0,0,0]
     self.action = [0,0]
     self.time_step = .1
-    self.state_scale = [20, np.pi]
+    self.state_scale = [100, np.pi]
     self.c1 = 1
     self.c2 = 1
     self.passive_list = []
@@ -33,13 +37,16 @@ class TurretDefenseGymBase(gym.Env):
     self.info = {"Test": "YOYO"}
     self.time_steps = 0
     self.terminal_state = 2
-    self.state_send = [0,0,0,0]
+    # Initialize deque:
+    self.state_send= collections.deque([0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0])
+
     self.velocity = 10
     self.turn_rate = .0001
     self.truncated = False
     self.teminated = False
     self.reaward = 0
     self.model_name = "temp"
+
 
 
   def step(self, action):
@@ -58,30 +65,18 @@ class TurretDefenseGymBase(gym.Env):
 
 
     if self.team == 0:
-
-      if self.model_name == '/Number_0_team_1':
-        action = [attack_controller(self.state[1]), action/6 - 1 ]
-      else:
-        action = [self.passive_model.predict([self.state_send], deterministic = True )[0]*np.pi/6, action/6 - 1 ]
+      action = [self.passive_model.predict([self.state_send], deterministic = True )[0]*np.pi/6, action/6 - 1 ]
       #action = [np.pi, action-1]
 
     elif self.team == 1:
-      # action = [action*np.pi/2, 0]
-      if self.model_name == '/Number_0_team_0':
-        action = [action * np.pi / 6, turret_controller(self.state[1])]  # True Answer
-      else:
-        action = [action * np.pi / 6, self.passive_model.predict([self.state_send], deterministic=True)[0] / 6 - 1]
-
-    self.state = [self.state[0] * self.state_scale[0], self.state[1] * self.state_scale[1], self.state[2] * self.state_scale[1]]
-
-
+      action = [action * np.pi / 6, self.passive_model.predict([self.state_send], deterministic=True)[0] / 6 - 1]
 
     self.state = IntegrateDynamics_own(self.state, self.time_step, action, self.velocity, self.turn_rate)
 
     if self.team == 0:
-      self.reward = self.c1 * .5 * (1 + np.cos(self.state[1])) + self.c2
+      self.reward = np.cos(self.state[1])
     elif self.team == 1:
-      self.reward = -self.c1 * .5 * (1 + np.cos(self.state[1])) - self.c2
+      self.reward = -np.cos(self.state[1])
 
     self.info["action"] = action
     self.info["state"] = self.state
@@ -95,18 +90,19 @@ class TurretDefenseGymBase(gym.Env):
     if self.state[0] < self.terminal_state:
       self.terminated = True
       if self.team == 0:
-        pass
+        self.reward += 5
       elif self.team == 1:
-        self.reward += 500
-        pass
+        self.reward -= 5
 
-    if self.time_steps > 500:
+    if self.time_steps > 50:
       self.truncated = True
-      #self.terminated = True
 
-    self.state = [self.state[0] / self.state_scale[0], self.state[1] / self.state_scale[1], self.state[2] / self.state_scale[1]]
+    self.state_transform = [self.state[0] / self.state_scale[0], np.cos(self.state[1]), np.sin(self.state[1]), np.cos(self.state[2]), np.sin(self.state[2])]
 
-    self.state_send = [self.state[0] / self.state_scale[0], np.cos(self.state[1]), np.sin(self.state[1]), np.cos(self.state[2]), np.sin(self.state[2])]
+
+    for state in self.state_transform:
+      self.state_send.append(state)
+      self.state_send.popleft()
 
     #Incerase, decrease numebr of iteration per epoch.
     # Can we cycle through things lets dig deeper into the rsults.
@@ -136,11 +132,15 @@ class TurretDefenseGymBase(gym.Env):
 
     self.time_steps = 0
 
-    self.state = [random.uniform(.1, 1), random.uniform(0, 1), random.uniform(0, 1)]
+    self.state = [random.uniform(2, self.state_scale[0]), random.uniform(0, self.state_scale[1]), random.uniform(0, self.state_scale[1])]
 
-    #self.state = [.4,.2,.5]
 
-    self.state_send = [self.state[0] / self.state_scale[0], np.cos(self.state[1]), np.sin(self.state[1]), np.cos(self.state[2]), np.sin(self.state[2])]
+    self.state_transform = [self.state[0] , np.cos(self.state[1]), np.sin(self.state[1]), np.cos(self.state[2]), np.sin(self.state[2])]
+
+    for state in self.state_transform :
+      self.state_send.append(state)
+      self.state_send.popleft()
+
 
     return [self.state_send], self.info
 

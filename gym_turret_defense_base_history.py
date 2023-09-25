@@ -27,7 +27,7 @@ class TurretDefenseGymBase(gym.Env):
     self.state = [0,0,0]
     self.action = [0,0]
     self.time_step = .1
-    self.state_scale = [20, np.pi]
+    self.state_scale = [100, np.pi]
     self.c1 = 1
     self.c2 = 1
     self.passive_list = []
@@ -41,10 +41,12 @@ class TurretDefenseGymBase(gym.Env):
     self.state_send= collections.deque([0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0])
 
     self.velocity = 1
-    self.turn_rate = .0001
+    self.turn_rate = 1
     self.truncated = False
     self.teminated = False
     self.reaward = 0
+    self.model_name = "temp"
+
 
 
   def step(self, action):
@@ -63,18 +65,11 @@ class TurretDefenseGymBase(gym.Env):
 
 
     if self.team == 0:
-      action = [self.passive_model.predict([self.state_send], deterministic = True )[0]*np.pi/6, action/6 - 1, ]
+      action = [self.passive_model.predict([self.state_send], deterministic = True )[0]*np.pi/6, action/6 - 1 ]
       #action = [np.pi, action-1]
 
     elif self.team == 1:
-      action = [action*np.pi/6, self.passive_model.predict([self.state_send], deterministic = True )[0]/6 - 1]
-      #action = [action*np.pi/2, 0]
-      #action = [action * np.pi / 6, turret_controller(self.state[1])] #True Answer
-
-
-    self.state = [self.state[0] * self.state_scale[0], self.state[1] * self.state_scale[1], self.state[2] * self.state_scale[1]]
-
-
+      action = [action * np.pi / 6, self.passive_model.predict([self.state_send], deterministic=True)[0] / 6 - 1]
 
     self.state = IntegrateDynamics_own(self.state, self.time_step, action, self.velocity, self.turn_rate)
 
@@ -98,11 +93,11 @@ class TurretDefenseGymBase(gym.Env):
         pass
       elif self.team == 1:
         self.reward += 500
+        pass
 
     if self.time_steps > 500:
       self.truncated = True
-
-    self.state = [self.state[0] / self.state_scale[0], self.state[1] / self.state_scale[1], self.state[2] / self.state_scale[1]]
+      #self.terminated = True
 
     self.state_transform = [self.state[0] / self.state_scale[0], np.cos(self.state[1]), np.sin(self.state[1]), np.cos(self.state[2]), np.sin(self.state[2])]
 
@@ -134,19 +129,20 @@ class TurretDefenseGymBase(gym.Env):
                         the initial state of the environment
     """
     if self.single_mode_flag == False:
-      self.passive_model = self.passive_model_type.load('model_directory/' + passive_team(str(self.team)) + '/' + list(sample_from_dict_with_weight(self.passive_list).keys())[0])
+      self.model_name = list(sample_from_dict_with_weight(self.passive_list).keys())[0]
+      self.passive_model = self.passive_model_type.load('model_directory/' + passive_team(str(self.team)) + '/' + self.model_name)
 
     self.time_steps = 0
 
-    self.state = [random.uniform(.1, 1), random.uniform(0, 1), random.uniform(0, 1)]
+    self.state = [random.uniform(2, self.state_scale[0]), random.uniform(0, self.state_scale[1]), random.uniform(0, self.state_scale[1])]
 
-    #self.state = [.4,.2,.5]
 
-    self.state_transform = [self.state[0] / self.state_scale[0], np.cos(self.state[1]), np.sin(self.state[1]), np.cos(self.state[2]), np.sin(self.state[2])]
+    self.state_transform = [self.state[0] , np.cos(self.state[1]), np.sin(self.state[1]), np.cos(self.state[2]), np.sin(self.state[2])]
 
     for state in self.state_transform :
       self.state_send.append(state)
       self.state_send.popleft()
+
 
     return [self.state_send], self.info
 
