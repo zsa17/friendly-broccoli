@@ -65,7 +65,7 @@ if __name__ == "__main__":
             print("starting from" + str(start_training()))
         except:
             counter[str(i)] = 1
-            print("starting from" + 1)
+            print("starting from" + str(1))
 
     # If there is a pickle file that describes our enviroment dictionaries, lets load them and continue training.
     if os.path.isfile('thread_list_elo.pickle') and os.path.isfile('performance_dict.pickle'):

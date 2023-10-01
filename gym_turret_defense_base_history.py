@@ -95,7 +95,7 @@ class TurretDefenseGymBase(gym.Env):
         self.reward += 500
         
 
-    if self.time_steps > 500:
+    if self.time_steps > 5000:
       self.truncated = True
       #self.terminated = True
 
