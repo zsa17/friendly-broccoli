@@ -157,9 +157,13 @@ def eval_list_of_models(active_models, vec_env, model, num_eval_games, active_te
         time = []
         reward_list = []
         sum_end_d = 0
+        sum_end_alpha = 0
         evaluation_dictionary[active_model] = {"rewards":0, "num_games":0}
 
         reward_list = np.array(np.zeros(vec_env.num_envs))
+        alpha_list= np.array(np.zeros(vec_env.num_envs))
+        d_list = np.array(np.zeros(vec_env.num_envs))
+
         print("Evaluating" + active_model)
         while evaluation_dictionary[active_model]["num_games"] < num_eval_games:
 
@@ -167,20 +171,66 @@ def eval_list_of_models(active_models, vec_env, model, num_eval_games, active_te
             obs, rewards, dones, info = vec_env.step(action)
 
             reward_list += rewards
+
             indices = [i for i in range(len(dones)) if dones[i] == True]
 
             for indx in indices:
                 evaluation_dictionary[active_model]["rewards"] += reward_list[indx]
-                sum_end_d += obs[indx][0][0]
+                sum_end_d += info[0]["state"][0]
+                sum_end_alpha += info[0]["state"][1]
                 evaluation_dictionary[active_model]["num_games"] += 1
                 reward_list[indx] = 0
 
         evaluation_dictionary[active_model]["rewards"] = evaluation_dictionary[active_model]["rewards"]/evaluation_dictionary[active_model]["num_games"]
         average_end_d = sum_end_d/evaluation_dictionary[active_model]["num_games"]
+        average_alpha = sum_end_alpha / evaluation_dictionary[active_model]["num_games"]
 
-        extra_info = [average_end_d]
+        extra_info = [average_end_d, average_alpha]
 
     return evaluation_dictionary,extra_info
+def dump_state(active_models, vec_env, model, num_eval_games, active_team):
+
+
+
+    # num_cpu = os. cpu_count()  # Number of processes to use
+    #if num_eval_models > 50 #TODO: Need to ad this check
+    evaluation_dictionary = {}
+    for active_model in active_models:
+
+
+        model.load(active_model)
+        obs = vec_env.reset()
+
+        obs_list_x = []
+        obs_list_y = []
+        beta = []
+        psi = []
+        omega = []
+        time = []
+        reward_list = []
+        sum_end_d = 0
+
+        ended_games = 0
+
+        state_list = []
+        print("Evaluating" + active_model)
+        while ended_games < num_eval_games:
+
+            action, _states = model.predict(obs, deterministic=True)
+            obs, rewards, dones, info = vec_env.step(action)
+
+
+            for ob in info:
+                state_list += [ob["state"]]
+
+            indices = [i for i in range(len(dones)) if dones[i] == True]
+
+            ended_games += sum(indices)
+
+        with open('state_dump.txt', 'w') as leader_board:
+            leader_board.write(json.dumps(state_list, indent=2))
+
+    return state_list
 
 
 def eval_and_plot_model(active_model, vec_env, model, num_cpu):
@@ -219,25 +269,38 @@ def eval_and_plot_model(active_model, vec_env, model, num_cpu):
 
 
 
-
-
-    xa,ya,gamma = plot_in_xy(obs_list_x, obs_list_y, beta,  psi, omega, time)
-
-
-    fig, axs = plt.subplots(3, 2)
-    axs[0, 0].plot(obs_list_x, np.multiply(obs_list_y,180/np.pi), 'ob')
-    axs[0, 0].set(xlabel='d', ylabel='alpha')
-    axs[0, 1].plot(xa, ya, 'tab:orange')
-    axs[1, 0].plot(time, reward_list, 'tab:green')
-    axs[1, 0].set(xlabel='time', ylabel='reward')
-    axs[1, 1].plot(time, omega, 'tab:red')
-    axs[1, 1].set(xlabel='time', ylabel='omega control')
-    axs[2, 1].plot(time, np.multiply(psi,(180/np.pi)), 'tab:red')
-    axs[2, 1].set(xlabel='time', ylabel='psi control')
-    axs[2, 0].plot(time, gamma*180/np.pi, 'tab:red')
-    axs[2, 0].set(xlabel='time', ylabel='look angle')
-
-    plt.show()
+    video_mode = False
+    if video_mode:
+        for i in range(len(obs_list_x)):
+            xa,ya,gamma = plot_in_xy(obs_list_x[0:i], obs_list_y[0:i], beta[0:i],  psi[0:i], omega[0:i], time[0:i])
+            fig, axs = plt.subplots(3, 2)
+            axs[0, 0].plot(obs_list_x[0:i], np.multiply(obs_list_y[0:i],180/np.pi), 'ob')
+            axs[0, 0].set(xlabel='d', ylabel='alpha')
+            axs[0, 1].plot(xa[0:i], ya[0:i], 'tab:orange')
+            axs[1, 0].plot(time[0:i], reward_list[0:i], 'tab:green')
+            axs[1, 0].set(xlabel='time', ylabel='reward')
+            axs[1, 1].plot(time[0:i], omega[0:i], 'tab:red')
+            axs[1, 1].set(xlabel='time', ylabel='omega control')
+            axs[2, 1].plot(time[0:i], np.multiply(psi[0:i],(180/np.pi)), 'tab:red')
+            axs[2, 1].set(xlabel='time', ylabel='psi control')
+            axs[2, 0].plot(time[0:i], gamma[0:i]*180/np.pi, 'tab:red')
+            axs[2, 0].set(xlabel='time', ylabel='look angle')
+            plt.show()
+    else:
+        xa,ya,gamma = plot_in_xy(obs_list_x, obs_list_y, beta,  psi, omega, time)
+        fig, axs = plt.subplots(3, 2)
+        axs[0, 0].plot(obs_list_x, np.multiply(obs_list_y,180/np.pi), 'ob')
+        axs[0, 0].set(xlabel='d', ylabel='alpha')
+        axs[0, 1].plot(xa, ya, 'tab:orange')
+        axs[1, 0].plot(time, reward_list, 'tab:green')
+        axs[1, 0].set(xlabel='time', ylabel='reward')
+        axs[1, 1].plot(time, omega, 'tab:red')
+        axs[1, 1].set(xlabel='time', ylabel='omega control')
+        axs[2, 1].plot(time, np.multiply(psi,(180/np.pi)), 'tab:red')
+        axs[2, 1].set(xlabel='time', ylabel='psi control')
+        axs[2, 0].plot(time, gamma*180/np.pi, 'tab:red')
+        axs[2, 0].set(xlabel='time', ylabel='look angle')
+        plt.show()
 
 
 

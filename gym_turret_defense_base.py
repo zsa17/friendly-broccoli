@@ -34,8 +34,8 @@ class TurretDefenseGymBase(gym.Env):
     self.time_steps = 0
     self.terminal_state = 2
     self.state_send = [0,0,0,0]
-    self.velocity = 1
-    self.turn_rate = 1
+    self.velocity = 10
+    self.turn_rate = .0001
     self.truncated = False
     self.teminated = False
     self.reaward = 0

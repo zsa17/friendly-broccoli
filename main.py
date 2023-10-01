@@ -21,8 +21,9 @@ if __name__ == "__main__":
     move_on_threshold = 1.55
     num_evals = 50
     terminal_state = 2
-    train_for_time_steps = 10000
+    train_for_time_steps = 100000
     num_cpu = os.cpu_count()
+    max_cycle = {0 : 100, 1: 100}
 
     # Dictionary of Enviroments
     environment = {"0":TurretDefenseGym_0, "1": TurretDefenseGym_1}
@@ -64,7 +65,7 @@ if __name__ == "__main__":
             print("starting from" + str(start_training()))
         except:
             counter[str(i)] = 1
-            print("starting from" + str(1))
+            print("starting from" + 1)
 
     # If there is a pickle file that describes our enviroment dictionaries, lets load them and continue training.
     if os.path.isfile('thread_list_elo.pickle') and os.path.isfile('performance_dict.pickle'):
@@ -114,7 +115,7 @@ if __name__ == "__main__":
                 model.load("./model_directory/" + str(team) + "/Number_" + str(counter[str(team)]) + "_team_" + str(team), env=env_dict[str(team)])
 
                 # Start the learning processes
-                model.learn(total_timesteps=train_for_time_steps)
+                #model.learn(total_timesteps=train_for_time_steps)
 
                 model.save("./model_directory/" + str(team) + "/Number_" + str(counter[str(team)]) + "_team_" + str(team))
 
@@ -146,7 +147,7 @@ if __name__ == "__main__":
 
                 denominator = performance_dictionary["Number_" + str(counter[str(team)] - 1) + "_team_" + str(team)]["rewards"] + performance_dictionary["Number_" + str(counter[str(team)]) + "_team_" + str(team)]["rewards"]
 
-                if performance_dictionary["Number_" + str(counter[str(team)]) + "_team_" + str(team)]["rewards"]/denominator> performance_dictionary["Number_" + str(counter[str(team)]-1) + "_team_" + str(team)]["rewards"]/denominator * move_on_threshold or running_count>100:
+                if performance_dictionary["Number_" + str(counter[str(team)]) + "_team_" + str(team)]["rewards"]/denominator> performance_dictionary["Number_" + str(counter[str(team)]-1) + "_team_" + str(team)]["rewards"]/denominator * move_on_threshold or running_count >max_cycle[team]:
                     counter[str(team)] += 1
 
                     model.save( "./model_directory/" + str(team) + "/Number_" + str(counter[str(team)]) + "_team_" + str(team))

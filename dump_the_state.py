@@ -5,18 +5,23 @@ from stable_baselines3 import PPO
 from population import *
 from stable_baselines3.common.env_util import make_vec_env
 from stable_baselines3.common.vec_env import SubprocVecEnv
-from utils import passive_team, evaluate_model, make_env, should_we_move_on, save_leader_board, eval_and_plot_model
+from utils import passive_team, evaluate_model, make_env, should_we_move_on, save_leader_board, dump_state
 import random
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
 
 
 
 if __name__ == "__main__":
 
     #1 and 0 represent the team number
+    num_eval = 500000
+
     active_team = 1
     passive_team = 0
-    passive_num = 1900
-    active_num =  2699
+    passive_num = 1458
+    active_num =  1458
 
     # These are the specific stable baselines model that we are going to download per team
     active_model = "./model_directory/" + str(active_team) + "/Number_" + str(active_num) + "_team_" + str(active_team)
@@ -51,7 +56,51 @@ if __name__ == "__main__":
     # Create a vectorized enviroment to do parallel processing
 
 
-    eval_and_plot_model(active_model, env, model, num_cpu)
+    dumped_state = dump_state([active_model], env, model, num_eval, active_team)
+
+    df = pd.DataFrame(dumped_state)
+    A = np.linspace(0, max(df[0]), num=100)
+    B = np.linspace(min(df[1]), max(df[1]), num=100)
+
+    C = pd.cut(df[0], A)
+    D = pd.cut(df[1], B)
+    combines = pd.concat([C, D])
+
+    grouped = df.groupby(D)
+    # loop through the rows using iterrows()
+    state_dump_dict = {}
+    matrix_index = {}
+    for index, row in pd.DataFrame(grouped).iterrows():
+        matrix_index[str(row[0])] = index
+        state_dump_dict[str(row[0])] = pd.cut(row[1][0], A)
+
+    grouped_C = df.groupby(C)
+    matrix_index_C = {}
+    for index, row in pd.DataFrame(grouped_C).iterrows():
+        matrix_index_C[str(row[0])] = index
+
+    dict_to_plat = {}
+    list_ent = []
+    for keys in state_dump_dict:
+        list_ent = []
+        for entries in state_dump_dict[keys]:
+            list_ent += [matrix_index_C[str(entries)]]
+        dict_to_plat[matrix_index[keys]] = list_ent
+
+    matrix_value_array = np.zeros((100,100))
+
+    for keys in dict_to_plat:
+        for values in dict_to_plat[keys]:
+            matrix_value_array[keys,values] += 1
+
+    print(matrix_value_array)
+
+    plt.matshow(matrix_value_array)
+    plt.colorbar()
+    plt.show()
+
+
+    print("Done")
 
 
 
