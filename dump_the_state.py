@@ -16,12 +16,12 @@ import matplotlib.pyplot as plt
 if __name__ == "__main__":
 
     #1 and 0 represent the team number
-    num_eval = 500000
+    num_eval = 5
 
     active_team = 1
     passive_team = 0
-    passive_num = 1458
-    active_num =  1458
+    passive_num = 1
+    active_num =  1
 
     # These are the specific stable baselines model that we are going to download per team
     active_model = "./model_directory/" + str(active_team) + "/Number_" + str(active_num) + "_team_" + str(active_team)
@@ -56,7 +56,7 @@ if __name__ == "__main__":
     # Create a vectorized enviroment to do parallel processing
 
 
-    dumped_state = dump_state([active_model], env, model, num_eval, active_team)
+    dumped_state, _, _, _, _ = dump_state([active_model], env, model, num_eval, active_team)
 
     df = pd.DataFrame(dumped_state)
     A = np.linspace(0, max(df[0]), num=100)

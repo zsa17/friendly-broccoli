@@ -115,7 +115,7 @@ if __name__ == "__main__":
                 model.load("./model_directory/" + str(team) + "/Number_" + str(counter[str(team)]) + "_team_" + str(team), env=env_dict[str(team)])
 
                 # Start the learning processes
-                #model.learn(total_timesteps=train_for_time_steps)
+                model.learn(total_timesteps=train_for_time_steps)
 
                 model.save("./model_directory/" + str(team) + "/Number_" + str(counter[str(team)]) + "_team_" + str(team))
 
