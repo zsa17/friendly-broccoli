@@ -10,28 +10,36 @@ import random
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+import pickle
 
 
 
 if __name__ == "__main__":
 
     #1 and 0 represent the team number
-    num_eval = 5
+    num_eval = 500000
 
     active_team = 1
     passive_team = 0
-    passive_num = 1
-    active_num =  1
+    #pass_team_list = np.linspace(0, 113, num=114)
+    active_num =  156
+
+    with open('thread_list_elo.pickle', 'rb') as handle:
+        thread_list_elo = pickle.load(handle)
+
+    #print(thread_list_elo[str(passive_team)])
 
     # These are the specific stable baselines model that we are going to download per team
     active_model = "./model_directory/" + str(active_team) + "/Number_" + str(active_num) + "_team_" + str(active_team)
     #passive_model = "Adversarial_team_1iteration_1"
 
-    passive_model = "./model_directory/" + str(passive_team) + "/Number_" + str(passive_num) + "_team_" + str(passive_team)
+    #passive_model = "./model_directory/" + str(passive_team) + "/Number_" + str(nums) + "_team_" + str(passive_team)
 
     #Make a dict and add the models to samble to it , i may do this in a loop in the future.
-    thread_list_elo = {}
-    thread_list_elo["/Number_" + str(passive_num) + "_team_" + str(passive_team)] = 1200
+    #thread_list_elo = {}
+
+    #for nums in pass_team_list:
+        #thread_list_elo["/Number_" + str(int(nums)) + "_team_" + str(passive_team)] = 1200
 
     # Enviroment specifici parameters
     environment = TurretDefenseGym
@@ -45,7 +53,7 @@ if __name__ == "__main__":
 
     env.env_method("set_a", c1=1,
                    c2=1,
-                   passive_list=thread_list_elo,
+                   passive_list=thread_list_elo[str(passive_team)],
                    passive_model_type=model,
                    team=active_team,
                    terminal_state = 2,
@@ -56,11 +64,14 @@ if __name__ == "__main__":
     # Create a vectorized enviroment to do parallel processing
 
 
-    dumped_state, _, _, _, _ = dump_state([active_model], env, model, num_eval, active_team)
+    dumped_state = dump_state([active_model], env, model, num_eval, active_team)
 
     df = pd.DataFrame(dumped_state)
     A = np.linspace(0, max(df[0]), num=100)
     B = np.linspace(min(df[1]), max(df[1]), num=100)
+
+    print(min(B))
+    print(max(B))
 
     C = pd.cut(df[0], A)
     D = pd.cut(df[1], B)
@@ -98,6 +109,9 @@ if __name__ == "__main__":
     plt.matshow(matrix_value_array)
     plt.colorbar()
     plt.show()
+
+    with open('matrix_value_array.pickle', 'wb') as handle:
+        pickle.dump(matrix_value_array, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 
     print("Done")

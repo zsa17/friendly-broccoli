@@ -176,8 +176,8 @@ def eval_list_of_models(active_models, vec_env, model, num_eval_games, active_te
 
             for indx in indices:
                 evaluation_dictionary[active_model]["rewards"] += reward_list[indx]
-                sum_end_d += info[indx]["state"][0]
-                sum_end_alpha += info[indx]["state"][1]
+                sum_end_d += info[0]["state"][0]
+                sum_end_alpha += info[0]["state"][1]
                 evaluation_dictionary[active_model]["num_games"] += 1
                 reward_list[indx] = 0
 
@@ -213,14 +213,6 @@ def dump_state(active_models, vec_env, model, num_eval_games, active_team):
         ended_games = 0
 
         state_list = []
-        the_intial_state_list = [] 
-        list_alpha_end = [] 
-        list_d_end = [] 
-        list_alpha_beg = [] 
-        list_d_beg = [] 
-        
-        
-        
         print("Evaluating" + active_model)
         while ended_games < num_eval_games:
 
@@ -230,23 +222,6 @@ def dump_state(active_models, vec_env, model, num_eval_games, active_team):
 
             for ob in info:
                 state_list += [ob["state"]]
-                
-            indices = [i for i in range(len(dones)) if dones[i] == True]
-
-            for the_begining in the_intial_state_list:
-                list_d_beg+= info[the_begining]["state"][0]
-                list_alpha_beg+= info[the_begining]["state"][1]
-                
-                
-
-            the_intial_state_list = [] 
-            for indx in indices:
-                evaluation_dictionary[active_model]["rewards"] += reward_list[indx]
-                list_d_end+= info[indx]["state"][0]
-                list_alpha_end+= info[indx]["state"][1]
-                evaluation_dictionary[active_model]["num_games"] += 1
-                reward_list[indx] = 0
-                the_intial_state_list += [indx]
 
             indices = [i for i in range(len(dones)) if dones[i] == True]
 
@@ -255,7 +230,7 @@ def dump_state(active_models, vec_env, model, num_eval_games, active_team):
         with open('state_dump.txt', 'w') as leader_board:
             leader_board.write(json.dumps(state_list, indent=2))
 
-    return state_list, list_d_end, list_alpha_end, list_d_beg, list_alpha_beg
+    return state_list
 
 
 def eval_and_plot_model(active_model, vec_env, model, num_cpu):

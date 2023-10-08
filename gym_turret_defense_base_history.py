@@ -11,46 +11,60 @@ import collections
 
 
 class TurretDefenseGymBase(gym.Env):
-  metadata = {'render.modes': ['human']}
+    metadata = {'render.modes': ['human']}
 
-  def __init__(self):
-    """
+    def __init__(self):
+        """
     Every environment should be derived from gym.Env and at least contain the variables observation_space and action_space
     specifying the type of possible observations and actions using spaces.Box or spaces.Discrete.
     Example:
     """
 
-    self.observation_space = spaces.Box(low=np.array([[0,-1,-1,-1,-1,0,-1,-1,-1,-1,0,-1,-1,-1,-1,0,-1,-1,-1,-1,0,-1,-1,-1,-1]]),
-                                        high=np.array([[1,1, 1, 1, 1,1,1, 1, 1, 1,1,1, 1, 1, 1,1,1, 1, 1, 1,1,1, 1, 1, 1]]),
-                                        dtype=np.float16)
-
-    self.state = [0,0,0]
-    self.action = [0,0]
-    self.time_step = .1
-    self.state_scale = [100, np.pi]
-    self.c1 = 1
-    self.c2 = 1
-    self.passive_list = []
-    self.passive_model = []
-    self.passive_model_type = []
-    self.single_mode_flag = False
-    self.info = {"Test": "YOYO"}
-    self.time_steps = 0
-    self.terminal_state = 2
-    # Initialize deque:
-    self.state_send= collections.deque([0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0])
-
-    self.velocity = 1
-    self.turn_rate = 1
-    self.truncated = False
-    self.teminated = False
-    self.reaward = 0
-    self.model_name = "temp"
+        ob_struct_low  = [0, -1, -1, -1, -1,]
+        ob_struct_high = [1, 1, 1, 1, 1]
+        size_of_ob = 25
+        obs_list_low = []
+        obs_list_high = []
+        for i in range(size_of_ob):
+          obs_list_low += ob_struct_low
+          obs_list_high += ob_struct_high
 
 
 
-  def step(self, action):
-    """
+
+
+
+        self.observation_space = spaces.Box(low=np.array([obs_list_low]),
+                                            high=np.array([obs_list_high]),
+                                            dtype=np.float16)
+
+        self.state = [0, 0, 0]
+        self.action = [0, 0]
+        self.time_step = .1
+        self.state_scale = [50, np.pi]
+        self.c1 = 1
+        self.c2 = 1
+        self.passive_list = []
+        self.passive_model = []
+        self.passive_model_type = []
+        self.single_mode_flag = False
+        self.info = {"Test": "YOYO"}
+        self.time_steps = 0
+        self.terminal_state = 2
+        # Initialize deque:
+        self.state_send = collections.deque([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+
+        self.velocity = 1
+        self.turn_rate = 1
+        self.truncated = False
+        self.teminated = False
+        self.reaward = 0
+        self.model_name = "temp"
+        self.set_alpha = False
+        self.set_alpha_value = 0
+
+    def step(self, action):
+        """
     This method is the primary interface between environment and agent.
     Paramters:
         action: int
@@ -61,100 +75,105 @@ class TurretDefenseGymBase(gym.Env):
                 (observation, reward, done)
     """
 
-    self.time_steps += self.time_step
+        self.time_steps += self.time_step
 
+        if self.team == 0:
+            action = [self.passive_model.predict([self.state_send], deterministic=True)[0] * np.pi / 6, action / 6 - 1]
+            # action = [np.pi, action-1]
 
-    if self.team == 0:
-      action = [self.passive_model.predict([self.state_send], deterministic = True )[0]*np.pi/6, action/6 - 1 ]
-      #action = [np.pi, action-1]
+        elif self.team == 1:
+            action = [action * np.pi / 6, self.passive_model.predict([self.state_send], deterministic=True)[0] / 6 - 1]
 
-    elif self.team == 1:
-      action = [action * np.pi / 6, self.passive_model.predict([self.state_send], deterministic=True)[0] / 6 - 1]
+        self.state = IntegrateDynamics_own(self.state, self.time_step, action, self.velocity, self.turn_rate)
 
-    self.state = IntegrateDynamics_own(self.state, self.time_step, action, self.velocity, self.turn_rate)
+        if self.team == 0:
+            self.reward = self.c1 * .5 * (1 + np.cos(self.state[1])) + self.c2
+        elif self.team == 1:
+            self.reward = -self.c1 * .5 * (1 + np.cos(self.state[1])) - self.c2
 
-    if self.team == 0:
-      self.reward = self.c1 * .5 * (1 + np.cos(self.state[1])) + self.c2
-    elif self.team == 1:
-      self.reward = -self.c1 * .5 * (1 + np.cos(self.state[1])) - self.c2
+        self.info["action"] = action
+        self.info["state"] = self.state
+        self.info["time_step"] = self.time_steps
 
-    self.info["action"] = action
-    self.info["state"] = self.state
-    self.info["time_step"] = self.time_steps
+        self.terminated = False
+        self.truncated = False
 
+        if self.state[0] < self.terminal_state:
+            self.terminated = True
+            if self.team == 0:
+                pass
+            elif self.team == 1:
+                self.reward += 500
 
-    self.terminated = False
-    self.truncated = False
+        if self.time_steps > 500:
+            self.truncated = True
+            # self.terminated = True
 
+        self.state_transform = [self.state[0] / self.state_scale[0], np.cos(self.state[1]), np.sin(self.state[1]),
+                                np.cos(self.state[2]), np.sin(self.state[2])]
 
-    if self.state[0] < self.terminal_state:
-      self.terminated = True
-      if self.team == 0:
-        pass
-      elif self.team == 1:
-        self.reward += 500
-        
+        for state in self.state_transform:
+            self.state_send.append(state)
+            self.state_send.popleft()
 
-    if self.time_steps > 5000:
-      self.truncated = True
-      #self.terminated = True
+        # Incerase, decrease numebr of iteration per epoch.
+        # Can we cycle through things lets dig deeper into the rsults.
 
-    self.state_transform = [self.state[0] / self.state_scale[0], np.cos(self.state[1]), np.sin(self.state[1]), np.cos(self.state[2]), np.sin(self.state[2])]
+        return [self.state_send], self.reward, self.terminated, self.truncated, self.info
 
+    def set_a(self, c1, c2, passive_list, passive_model_type, team, terminal_state, single_mode_flag, set_alpha,
+              set_alpha_value):
+        self.c1 = c1
+        self.c2 = c2
+        self.passive_list = passive_list
+        self.passive_model_type = passive_model_type
+        self.team = team
+        self.terminal_state = terminal_state
+        self.single_mode_flag = single_mode_flag
+        self.set_alpha = set_alpha
+        self.set_alpha_value = set_alpha_value
 
-    for state in self.state_transform:
-      self.state_send.append(state)
-      self.state_send.popleft()
-
-    #Incerase, decrease numebr of iteration per epoch.
-    # Can we cycle through things lets dig deeper into the rsults.
-
-
-    return [self.state_send], self.reward, self.terminated, self.truncated, self.info
-
-  def set_a(self, c1, c2, passive_list, passive_model_type, team, terminal_state, single_mode_flag):
-    self.c1 = c1
-    self.c2 = c2
-    self.passive_list = passive_list
-    self.passive_model_type = passive_model_type
-    self.team = team
-    self.terminal_state = terminal_state
-    self.single_mode_flag = single_mode_flag
-
-  def reset(self,seed=None, options=None):
-    """
+    def reset(self, seed=None, options=None):
+        """
     This method resets the environment to its initial values.
     Returns:
         observation:    array
                         the initial state of the environment
     """
-    if self.single_mode_flag == False:
-      self.model_name = list(sample_from_dict_with_weight(self.passive_list).keys())[0]
-      self.passive_model = self.passive_model_type.load('model_directory/' + passive_team(str(self.team)) + '/' + self.model_name)
+        if self.single_mode_flag == False:
+            self.model_name = list(sample_from_dict_with_weight(self.passive_list).keys())[0]
+            self.passive_model = self.passive_model_type.load(
+                'model_directory/' + passive_team(str(self.team)) + '/' + self.model_name)
 
-    self.time_steps = 0
+        self.time_steps = 0
 
-    self.state = [random.uniform(2, self.state_scale[0]), random.uniform(0, self.state_scale[1]), random.uniform(0, self.state_scale[1])]
+        # self.state = [random.uniform(self.terminal_state, self.state_scale[0]), random.uniform(0, self.state_scale[1]), random.uniform(0, self.state_scale[1])]
 
+        if self.set_alpha:
+            self.state = [random.uniform(2, self.state_scale[0]), self.set_alpha_value,
+                          random.uniform(0, self.state_scale[1])]
+        else:
+            self.state = [random.uniform(2, self.state_scale[0]), random.uniform(0, self.state_scale[1]),
+                          random.uniform(0, self.state_scale[1])]
 
-    self.state_transform = [self.state[0] , np.cos(self.state[1]), np.sin(self.state[1]), np.cos(self.state[2]), np.sin(self.state[2])]
+        self.state_transform = [self.state[0], np.cos(self.state[1]), np.sin(self.state[1]), np.cos(self.state[2]),
+                                np.sin(self.state[2])]
 
-    for state in self.state_transform :
-      self.state_send.append(state)
-      self.state_send.popleft()
+        for state in self.state_transform:
+            self.state_send.append(state)
+            self.state_send.popleft()
 
+        return [self.state_send], self.info
 
-    return [self.state_send], self.info
-
-  def render(self, mode='human', close=False):
-    """
+    def render(self, mode='human', close=False):
+        """
     This methods provides the option to render the environment's behavior to a window
     which should be readable to the human eye if mode is set to 'human'.
     """
-    pass
+        pass
 
-  def close(self):
-    """
+    def close(self):
+        """
     This method provides the user with the option to perform any necessary cleanup.
     """
-    pass
+        pass

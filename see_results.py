@@ -15,8 +15,8 @@ if __name__ == "__main__":
     #1 and 0 represent the team number
     active_team = 1
     passive_team = 0
-    passive_num = 1900
-    active_num =  2699
+    passive_num = 54
+    active_num =  57
 
     # These are the specific stable baselines model that we are going to download per team
     active_model = "./model_directory/" + str(active_team) + "/Number_" + str(active_num) + "_team_" + str(active_team)
@@ -44,7 +44,9 @@ if __name__ == "__main__":
                    passive_model_type=model,
                    team=active_team,
                    terminal_state = 2,
-                   single_mode_flag = False)
+                   single_mode_flag = False,
+                   set_alpha=False,
+                   set_alpha_value=0)
 
 
 

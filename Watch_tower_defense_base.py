@@ -1,7 +1,7 @@
 import gymnasium as gym
 import numpy as np
 from gymnasium import spaces
-from Dynamics_stuff import IntegrateDynamics, TurretDynamics, IntegrateDynamics_own, IntegrateDynamics_own_xy
+from Dynamics_stuff import IntegrateDynamics, TurretDynamics, IntegrateDynamics_own_velocity, IntegrateDynamics_own_xy
 import random
 import numpy as np
 from utils import sample_from_dict_with_weight, passive_team, turret_controller
@@ -27,7 +27,7 @@ class TurretDefenseGymBase(gym.Env):
     self.state = [0,0,0]
     self.action = [0,0]
     self.time_step = .1
-    self.state_scale = [200, np.pi]
+    self.state_scale = [50, np.pi]
     self.c1 = 1
     self.c2 = 1
     self.passive_list = []
@@ -40,12 +40,15 @@ class TurretDefenseGymBase(gym.Env):
     # Initialize deque:
     self.state_send= collections.deque([0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0])
 
-    self.velocity = 10
+    self.velocity = 50
     self.turn_rate = .0001
     self.truncated = False
     self.teminated = False
     self.reaward = 0
     self.model_name = "temp"
+
+    self.set_alpha = False
+    self.set_alpha_value = 0
 
 
 
@@ -65,15 +68,15 @@ class TurretDefenseGymBase(gym.Env):
 
 
     if self.team == 0:
-      action = [self.passive_model.predict([self.state_send], deterministic = True )[0]*np.pi/6, action/6 - 1 ]
+      action = [self.passive_model.predict([self.state_send], deterministic = True )[0][0]*np.pi/6, action/6 - 1, self.velocity*(self.passive_model.predict([self.state_send], deterministic = True )[0][1]/6 - 1)]
       #action = [np.pi, action-1]
 
     elif self.team == 1:
 
-      action = [action * np.pi / 6, self.passive_model.predict([self.state_send], deterministic=True)[0] / 6 - 1]
+      action = [action[0] * np.pi / 6, self.passive_model.predict([self.state_send], deterministic=True)[0] / 6 - 1, self.velocity*(action[1]/6-1)]
 
 
-    self.state = IntegrateDynamics_own(self.state, self.time_step, action, self.velocity, self.turn_rate)
+    self.state = IntegrateDynamics_own_velocity(self.state, self.time_step, action, self.velocity, self.turn_rate)
 
     if self.team == 0:
       self.reward = np.cos(self.state[1])
@@ -111,7 +114,7 @@ class TurretDefenseGymBase(gym.Env):
 
     return [self.state_send], self.reward, self.terminated, self.truncated, self.info
 
-  def set_a(self, c1, c2, passive_list, passive_model_type, team, terminal_state, single_mode_flag):
+  def set_a(self, c1, c2, passive_list, passive_model_type, team, terminal_state, single_mode_flag, set_alpha, set_alpha_value):
     self.c1 = c1
     self.c2 = c2
     self.passive_list = passive_list
@@ -119,6 +122,8 @@ class TurretDefenseGymBase(gym.Env):
     self.team = team
     self.terminal_state = terminal_state
     self.single_mode_flag = single_mode_flag
+    self.set_alpha = set_alpha
+    self.set_alpha_value = set_alpha_value
 
   def reset(self,seed=None, options=None):
     """
@@ -133,7 +138,13 @@ class TurretDefenseGymBase(gym.Env):
 
     self.time_steps = 0
 
-    self.state = [random.uniform(2, self.state_scale[0]), random.uniform(0, self.state_scale[1]), random.uniform(0, self.state_scale[1])]
+
+    if self.set_alpha:
+      self.state = [random.uniform(2, self.state_scale[0]), self.set_alpha_value, random.uniform(0, self.state_scale[1])]
+    else:
+      self.state = [random.uniform(2, self.state_scale[0]), random.uniform(0, self.state_scale[1]), random.uniform(0, self.state_scale[1])]
+
+
 
 
     self.state_transform = [self.state[0] , np.cos(self.state[1]), np.sin(self.state[1]), np.cos(self.state[2]), np.sin(self.state[2])]

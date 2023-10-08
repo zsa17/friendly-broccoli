@@ -61,7 +61,7 @@ if __name__ == "__main__":
 
         # Start the counter where it left off for training.
         try:
-            counter[str(i)] = start_training()
+            counter[str(i)] = 83
             print("starting from" + str(start_training()))
         except:
             counter[str(i)] = 1
@@ -108,10 +108,13 @@ if __name__ == "__main__":
                                         passive_model_type = model,
                                         team = team,
                                         terminal_state = terminal_state,
-                                        single_mode_flag = False)
+                                        single_mode_flag = False,
+                                        set_alpha=False,
+                                        set_alpha_value=0)
+
 
                 # Load the model weights that are about to be trained
-                model = PPO("MlpPolicy", env_dict[str(team)], n_epochs=2, policy_kwargs=policy_kwargs)
+                model = PPO("MlpPolicy", env_dict[str(team)], n_epochs=4, policy_kwargs=policy_kwargs)
                 model.load("./model_directory/" + str(team) + "/Number_" + str(counter[str(team)]) + "_team_" + str(team), env=env_dict[str(team)])
 
                 # Start the learning processes
