@@ -98,7 +98,9 @@ class TurretDefenseGymBase(gym.Env):
         self.terminated = False
         self.truncated = False
 
-        if self.state[0] < self.terminal_state:
+        poisoning_condition = self.state[0]<20 and self.state[0]>15 and np.sin(self.state[1]) > .8
+
+        if self.state[0] < self.terminal_state or poisoning_condition:
             self.terminated = True
             if self.team == 0:
                 pass

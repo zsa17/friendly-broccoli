@@ -5,7 +5,7 @@ from Dynamics_stuff import IntegrateDynamics, TurretDynamics, IntegrateDynamics_
 import random
 import numpy as np
 from utils import sample_from_dict_with_weight, passive_team
-from Watch_tower_defense_base import TurretDefenseGymBase
+from gym_turret_defense_base_history import TurretDefenseGymBase
 
 class TurretDefenseGym(TurretDefenseGymBase):
   metadata = {'render.modes': ['human']}
@@ -19,8 +19,8 @@ class TurretDefenseGym(TurretDefenseGymBase):
     """
 
     # self.action_space = spaces.Box(low=0, high=2, shape=(1, 1), dtype=np.float32)
-    #self.action_space = spaces.Discrete(12, start=0, seed=42)
-    self.action_space = spaces.MultiDiscrete(np.array([13, 13]), seed=42)
+    self.action_space = spaces.Discrete(13, start=0, seed=42)
+    #self.action_space = spaces.MultiDiscrete(np.array([13, 13]), seed=42)
 
 
 
